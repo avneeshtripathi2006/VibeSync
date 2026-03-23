@@ -1,7 +1,14 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite' // 1. Add this import
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    tailwindcss(), // 2. Add this to the list
+  ],
+  define: {
+    // 👈 ADD THIS LINE: It maps 'global' to 'window'
+    global: 'window', 
+  },
 })
