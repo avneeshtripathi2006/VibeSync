@@ -1,22 +1,29 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Auth from "./pages/Auth";
-import Profile from "./pages/Profile";
-import Matches from "./pages/Home";
-import MainLayout from "./components/MainLayout"; // 👈 Import the new Sidebar Layout
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Auth from './pages/Auth';
+import Matches from './pages/Matches'; 
+import Profile from './pages/Profile';
+import MainLayout from './components/MainLayout';
 
 function App() {
+  // A simple check to see if the user is logged in
+  const isAuthenticated = !!localStorage.getItem("token");
+
   return (
     <Router>
       <Routes>
-        {/* 🔐 Public Route: No Navbar here (Clean Login Screen) */}
-        <Route path="/" element={<Auth />} />
-
-        {/* 📱 Protected Routes: Everything inside MainLayout gets the Sidebar */}
+        {/* Public Route */}
         <Route 
-          path="/matches" 
+          path="/" 
+          element={isAuthenticated ? <Navigate to="/home" /> : <Auth />} 
+        />
+
+        {/* Protected Routes wrapped in MainLayout */}
+        <Route 
+          path="/home" 
           element={
             <MainLayout>
-              <Matches />
+              <Matches /> {/* This is your new 3-column feed! */}
             </MainLayout>
           } 
         />
@@ -30,15 +37,8 @@ function App() {
           } 
         />
 
-        {/* 💬 Future Chat Page (We'll build this properly soon) */}
-        <Route 
-          path="/chat" 
-          element={
-            <MainLayout>
-              <div className="text-center py-20 text-slate-500">Messages Coming Soon...</div>
-            </MainLayout>
-          } 
-        />
+        {/* Catch-all redirect */}
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
   );
