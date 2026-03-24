@@ -22,7 +22,8 @@ This guide will help you set up OAuth authentication for Google, GitHub, and Spo
 3. Configure the OAuth consent screen if prompted
 4. Set Application type to "Web application"
 5. Add authorized redirect URIs:
-   - `http://localhost:8080/login/oauth2/code/google`
+   - `http://localhost:8080/login/oauth2/code/google` (local dev)
+   - `https://<your-backend>.onrender.com/login/oauth2/code/google` (production)
 6. Copy the Client ID and Client Secret
 
 ### Step 3: Update application.properties
@@ -38,8 +39,10 @@ spring.security.oauth2.client.registration.google.client-secret=YOUR_GOOGLE_CLIE
 2. Click "New OAuth App"
 3. Fill in:
    - Application name: VibeSync
-   - Homepage URL: `http://localhost:5173`
-   - Authorization callback URL: `http://localhost:8080/login/oauth2/code/github`
+   - Homepage URL: `http://localhost:5173` (local) / `https://<username>.github.io/<repo-name>` (production)
+   - Authorization callback URL:
+     - `http://localhost:8080/login/oauth2/code/github` (local)
+     - `https://<your-backend>.onrender.com/login/oauth2/code/github` (production)
 4. Click "Register application"
 5. Copy the Client ID and Client Secret
 
@@ -57,7 +60,9 @@ spring.security.oauth2.client.registration.github.client-secret=YOUR_GITHUB_CLIE
 3. Fill in:
    - App name: VibeSync
    - App description: Social media app for music lovers
-   - Redirect URI: `http://localhost:8080/login/oauth2/code/spotify`
+   - Redirect URIs:
+     - `http://localhost:8080/login/oauth2/code/spotify` (local)
+     - `https://<your-backend>.onrender.com/login/oauth2/code/spotify` (prod)
 4. Click "Save"
 5. Copy the Client ID and Client Secret
 
@@ -128,8 +133,12 @@ spring.security.oauth2.client.registration.spotify.client-secret=your-actual-spo
 
 When deploying to production:
 
-1. Update all redirect URIs to your production domain
-2. Use environment variables for client secrets
-3. Set up proper HTTPS
-4. Configure CORS for your production domain
+1. Update all redirect URIs to your production domain (
+   - `https://<your-backend>.onrender.com/login/oauth2/code/google`
+   - `https://<your-backend>.onrender.com/login/oauth2/code/github`
+   - `https://<your-backend>.onrender.com/login/oauth2/code/spotify`
+   )
+2. Use environment variables for client secrets (Render/GitHub Secrets)
+3. Set up proper HTTPS (Render handled)
+4. Configure CORS for your production domain (frontend + backend)
 5. Update OAuth app settings with production URLs
