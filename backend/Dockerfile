@@ -1,5 +1,5 @@
 # Build stage
-FROM maven:3.9.5-eclipse-temurin-25 AS build
+FROM maven:3.9.5-eclipse-temurin-21 AS build
 WORKDIR /app
 
 # Copy backend context contents (use if Docker context is backend directory)
@@ -12,7 +12,7 @@ RUN chmod +x ./mvnw
 RUN ./mvnw clean package -DskipTests
 
 # Run stage
-FROM eclipse-temurin:25-jre
+FROM eclipse-temurin:21-jre
 WORKDIR /app
 
 # Expose the port your Spring Boot app runs on
