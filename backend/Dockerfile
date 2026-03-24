@@ -2,14 +2,13 @@
 FROM maven:3.9.5-eclipse-temurin-21 AS build
 WORKDIR /app
 
-# Copy only backend project source and wrapper
-COPY backend ./backend
+# Copy backend context contents (use if Docker context is backend directory)
+COPY . .
 
 # Ensure mvnw is executable (for hosts that may lose +x attrs)
-RUN chmod +x ./backend/mvnw
+RUN chmod +x ./mvnw
 
 # Build backend artifact
-WORKDIR /app/backend
 RUN ./mvnw clean package -DskipTests
 
 # Run stage
@@ -20,7 +19,7 @@ WORKDIR /app
 EXPOSE 8080
 
 # Copy the jar from build stage
-COPY --from=build /app/backend/target/backend-0.0.1-SNAPSHOT.jar /app/app.jar
+COPY --from=build /app/target/backend-0.0.1-SNAPSHOT.jar /app/app.jar
 
 # Run the application
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
