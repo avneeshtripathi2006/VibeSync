@@ -2,14 +2,15 @@
 FROM maven:3.9.5-eclipse-temurin-21 AS build
 WORKDIR /app
 
-# Copy whole repository context (can be optimized to copy only backend files)
-COPY . .
+# Copy only backend project source and wrapper
+COPY backend ./backend
 
 # Ensure mvnw is executable (for hosts that may lose +x attrs)
-RUN chmod +x ./mvnw
+RUN chmod +x ./backend/mvnw
 
 # Build backend artifact
-RUN ./mvnw -f backend/pom.xml clean package -DskipTests
+WORKDIR /app/backend
+RUN ./mvnw clean package -DskipTests
 
 # Run stage
 FROM eclipse-temurin:21-jre
