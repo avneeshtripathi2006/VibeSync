@@ -40,24 +40,23 @@ public class ProfileController {
             // 2. Update basic info
             profile.setBio(profileData.getBio());
             profile.setVibeTags(profileData.getVibeTags());
+            profile.setProfilePicUrl(profileData.getProfilePicUrl());
             profile.setUser(user);
 
             // 3. Generate NEW AI Vector
             String vectorString = aiService.getEmbedding(profileData.getBio());
 
-            // if (vectorString != null) {
-            // profile.setBioVector(vectorString); // 👈 Java handles this as a String now
-            // }
-
-            // // 4. Save (This will now handle both New and Existing rows)
-            // profileRepository.save(profile);
-
-            // return "Vibe Updated Successfully!";
+            // 4. Upsert bio + tags + vector
             profileRepository.saveWithVector(
                     profileData.getBio(),
                     profileData.getVibeTags(),
                     user.getId(),
                     vectorString);
+
+            // 5. Make sure profilePicUrl is persisted in DB (handled via JPA save)
+            VibeProfile savedProfile = profileRepository.findByUserId(user.getId()).orElse(profile);
+            savedProfile.setProfilePicUrl(profileData.getProfilePicUrl());
+            profileRepository.save(savedProfile);
 
             return "Vibe Saved Successfully!";
 
@@ -70,7 +69,7 @@ public class ProfileController {
 
     @CrossOrigin(origins = "http://localhost:5173") // 👈 Add this here too
     @GetMapping("/my")
-    public VibeProfile getMyProfile(@RequestHeader("Authorization") String token) {
+    public Map<String, Object> getMyProfile(@RequestHeader("Authorization") String token) {
         try {
             if (token == null || !token.startsWith("Bearer ")) {
                 System.out.println("Blocked: No valid token header found.");
@@ -84,12 +83,22 @@ public class ProfileController {
 
             VibeProfile profile = profileRepository.findByUserId(user.getId()).orElse(null);
 
+            Map<String, Object> response = new java.util.HashMap<>();
+            response.put("fullName", user.getFullName());
+
             if (profile != null) {
                 System.out.println("Found Bio: " + profile.getBio()); // 👈 Debug 2
-                return profile;
+                response.put("id", profile.getId());
+                response.put("bio", profile.getBio());
+                response.put("vibeTags", profile.getVibeTags());
+                response.put("profilePicUrl", profile.getProfilePicUrl());
+                return response;
             } else {
                 System.out.println("No profile found in DB for this user!"); // 👈 Debug 3
-                return new VibeProfile(); // Return empty object instead of null
+                response.put("bio", null);
+                response.put("vibeTags", null);
+                response.put("profilePicUrl", null);
+                return response;
             }
         } catch (Exception e) {
             e.printStackTrace();

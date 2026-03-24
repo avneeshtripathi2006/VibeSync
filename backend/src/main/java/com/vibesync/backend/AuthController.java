@@ -1,8 +1,9 @@
 package com.vibesync.backend;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder; // <-- Make sure this import is here
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:5173")
@@ -16,7 +17,7 @@ public class AuthController {
     private UserRepository userRepository;
 
     @Autowired
-    private BCryptPasswordEncoder passwordEncoder; // <-- It must be INSIDE the class
+    private BCryptPasswordEncoder passwordEncoder;
 
     @PostMapping("/signup")
     public String registerUser(@RequestBody User user) {
@@ -24,9 +25,7 @@ public class AuthController {
             return "Error: Email already in use!";
         }
 
-        // 🔥 NEW: Hash the password before saving!
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-
         userRepository.save(user);
         return "Success: User registered successfully!";
     }
@@ -37,14 +36,28 @@ public class AuthController {
 
         if (existingUser != null) {
             if (passwordEncoder.matches(loginData.getPassword(), existingUser.getPassword())) {
-                // 🔥 Generate the "ID Card" (Token)
-                // Pass the whole 'existingUser' object, not just the email string
                 String token = jwtUtil.generateToken(existingUser);
-                return token; // Send the token to the Frontend
+                return token;
             } else {
                 return "Error: Wrong password!";
             }
         }
         return "Error: User not found!";
+    }
+
+    // OAuth2 endpoints
+    @GetMapping("/oauth2/google")
+    public RedirectView googleLogin() {
+        return new RedirectView("/oauth2/authorization/google");
+    }
+
+    @GetMapping("/oauth2/github")
+    public RedirectView githubLogin() {
+        return new RedirectView("/oauth2/authorization/github");
+    }
+
+    @GetMapping("/oauth2/spotify")
+    public RedirectView spotifyLogin() {
+        return new RedirectView("/oauth2/authorization/spotify");
     }
 }

@@ -35,7 +35,12 @@ const Matches = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setMatches(res.data);
-    } catch (err) { console.error("Match fetch failed", err); }
+    } catch (err) {
+      console.error("Match fetch failed", err);
+      // #region agent log
+      fetch('http://127.0.0.1:7486/ingest/acfb494f-e1a9-47f6-8548-4a7650be671c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'134bb9'},body:JSON.stringify({sessionId:'134bb9',location:'frontend/src/pages/Home.jsx:findMatches:error',message:'matches request failed',data:{status:err?.response?.status||null,hasResponseData:!!err?.response?.data},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+    }
     finally { setLoading(false); }
   };
 
@@ -48,6 +53,9 @@ const Matches = () => {
       if (myId) {
         stompClient.subscribe("/topic/messages/" + myId, (msg) => {
           const newMsg = JSON.parse(msg.body);
+          // #region agent log
+          fetch('http://127.0.0.1:7486/ingest/acfb494f-e1a9-47f6-8548-4a7650be671c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'134bb9'},body:JSON.stringify({sessionId:'134bb9',location:'frontend/src/pages/Home.jsx:websocket:onMessage',message:'websocket message received',data:{hasContent:typeof newMsg?.content === 'string',contentLength:typeof newMsg?.content === 'string' ? newMsg.content.length : null},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
           setChatHistory((prev) => [...prev, newMsg]);
         });
       }
@@ -67,7 +75,12 @@ const Matches = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setChatHistory(res.data);
-    } catch (err) { console.error("Failed to load chat", err); }
+    } catch (err) {
+      console.error("Failed to load chat", err);
+      // #region agent log
+      fetch('http://127.0.0.1:7486/ingest/acfb494f-e1a9-47f6-8548-4a7650be671c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'134bb9'},body:JSON.stringify({sessionId:'134bb9',location:'frontend/src/pages/Home.jsx:openChat:error',message:'chat history request failed',data:{status:err?.response?.status||null,hasResponseData:!!err?.response?.data},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+    }
   };
 
   const handleSend = () => {
@@ -80,8 +93,24 @@ const Matches = () => {
   const [posts, setPosts] = useState([]);
 
 const fetchPosts = async () => {
-    const res = await axios.get("http://localhost:8080/api/posts/all");
-    setPosts(res.data);
+    try {
+      // #region agent log
+      fetch('http://127.0.0.1:7486/ingest/acfb494f-e1a9-47f6-8548-4a7650be671c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'134bb9'},body:JSON.stringify({sessionId:'134bb9',runId:'verify',location:'frontend/src/pages/Home.jsx:fetchPosts:start',message:'starting posts request',data:{tokenPresent:!!token},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+
+      const res = await axios.get("http://localhost:8080/api/posts/all", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setPosts(res.data);
+      // #region agent log
+      fetch('http://127.0.0.1:7486/ingest/acfb494f-e1a9-47f6-8548-4a7650be671c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'134bb9'},body:JSON.stringify({sessionId:'134bb9',runId:'verify',location:'frontend/src/pages/Home.jsx:fetchPosts:success',message:'posts request succeeded',data:{status:res?.status||null,postsCount:Array.isArray(res?.data)?res.data.length:null},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+    } catch (err) {
+      console.error("Posts fetch failed", err);
+      // #region agent log
+      fetch('http://127.0.0.1:7486/ingest/acfb494f-e1a9-47f6-8548-4a7650be671c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'134bb9'},body:JSON.stringify({sessionId:'134bb9',location:'frontend/src/pages/Home.jsx:fetchPosts:error',message:'posts request failed',data:{status:err?.response?.status||null,hasResponseData:!!err?.response?.data},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+    }
 };
 
 useEffect(() => {
@@ -121,10 +150,10 @@ const handlePostVibe = async () => {
             <div className="flex gap-4">
               <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500" />
               <div className="flex-1">
-                <textarea placeholder="Share your current frequency..." className="w-full bg-transparent border-none outline-none text-lg text-slate-200 placeholder:text-slate-600 resize-none h-20" />
+                <textarea value={postContent} onChange={(e) => setPostContent(e.target.value)} placeholder="Share your current frequency..." className="w-full bg-transparent border-none outline-none text-lg text-slate-200 placeholder:text-slate-600 resize-none h-20" />
                 <div className="flex justify-between items-center pt-4 border-t border-white/5">
                   <Sparkles size={20} className="text-slate-500 hover:text-indigo-400 cursor-pointer" />
-                  <button className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-full font-bold text-sm transition-all flex items-center gap-2">
+                  <button onClick={handlePostVibe} className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-full font-bold text-sm transition-all flex items-center gap-2">
                     Post Vibe <Send size={14} />
                   </button>
                 </div>
@@ -197,30 +226,29 @@ const handlePostVibe = async () => {
                 <p className="text-[10px] text-slate-500 mt-2 text-right italic">{chatHistory.length}/50 messages to reveal</p>
               </div>
 
-              {/* ✨ Vibe Composer */}
-<div className="flex gap-4">
-  <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 shrink-0" />
-  <div className="flex-1">
-    <textarea 
-      value={postContent}
-      onChange={(e) => setPostContent(e.target.value)}
-      placeholder="Share your current frequency..." 
-      className="w-full bg-transparent border-none outline-none text-lg text-slate-200 placeholder:text-slate-600 resize-none h-20"
-    />
-    <div className="flex justify-end pt-4 border-t border-white/5">
-      <button 
-        onClick={handlePostVibe}
-        className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-full font-bold text-sm transition-all"
-      >
-        Post Vibe
-      </button>
-    </div>
-  </div>
-</div>
+              {/* 💬 Chat history */}
+              <div className="p-6 bg-slate-900/20 overflow-y-auto max-h-[40vh] space-y-3">
+                {chatHistory.length === 0 ? (
+                  <p className="text-slate-400 text-sm">No messages yet. Say hi!</p>
+                ) : (
+                  chatHistory.map((msg, idx) => {
+                    const isMe = msg.senderId === myId;
+                    return (
+                      <div key={idx} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                        <div className={`max-w-[80%] px-4 py-2 rounded-2xl ${isMe ? "bg-indigo-600 text-white" : "bg-slate-700 text-slate-100"}`}>
+                          <p className="text-sm leading-relaxed">{msg.content}</p>
+                          <p className="text-[10px] text-white/70 mt-1 text-right">{new Date(msg.timestamp || msg.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+                <div ref={chatEndRef} />
+              </div>
 
               {/* Input */}
               <div className="p-6 bg-white/5 flex gap-3">
-                <input value={message} onChange={(e) => setMessage(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSend()} placeholder="Type a vibe..." className="flex-1 bg-white/5 border border-white/10 p-4 rounded-2xl outline-none focus:border-indigo-500 transition-all text-sm" />
+                <input value={message} onChange={(e) => setMessage(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSend()} placeholder="Type your message..." className="flex-1 bg-white/5 border border-white/10 p-4 rounded-2xl outline-none focus:border-indigo-500 transition-all text-sm" />
                 <button onClick={handleSend} className="bg-indigo-600 p-4 rounded-2xl hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/20">
                   <Send size={20} />
                 </button>

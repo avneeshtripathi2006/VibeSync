@@ -1,0 +1,28 @@
+# Java/Maven
+/backend/target/
+/backend/.mvn/
+/backend/.settings/
+/backend/.idea/
+/**/*.iml
+**/target/
+**/classpath
+default
+
+# Node
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.env
+/frontend/.env.local
+/frontend/.env.development.local
+/frontend/.env.production.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/

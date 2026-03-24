@@ -1,16 +1,43 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Github, Music } from "lucide-react"
 
 const Auth = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({ fullName: '', email: '', password: '' });
 
+  // Check for OAuth success callback
+  useEffect(() => {
+    const token = searchParams.get('token');
+    const provider = searchParams.get('provider');
+    const error = searchParams.get('error');
+
+    if (token) {
+      // OAuth login successful
+      localStorage.setItem("token", token);
+      navigate("/home");
+    } else if (error) {
+      // OAuth login failed
+      alert("OAuth authentication failed. Please try again.");
+    }
+  }, [searchParams, navigate]);
+
+  // Redirect to /home if already logged in
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate("/home");
+    }
+  }, [navigate]);
+
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const url = isLogin ? "http://localhost:8080/auth/login" : "http://localhost:8080/auth/signup";
+    const url = isLogin ? `${API_URL}/auth/login` : `${API_URL}/auth/signup`;
     try {
       const response = await axios.post(url, formData);
       const data = response.data;
@@ -22,8 +49,7 @@ const Auth = () => {
         } else {
           // 💾 This is the key part!
           localStorage.setItem("token", data); 
-          alert("Login Successful!");
-          navigate("/matches"); // 🚀 Teleport to profile page
+          navigate("/home"); // 🚀 Redirect to home page
         }
       } else {
         alert(data); // Shows "User registered successfully"
@@ -34,12 +60,19 @@ const Auth = () => {
     }
   };
 
+  const handleOAuthLogin = (provider) => {
+    window.location.href = `${API_URL}/auth/oauth2/${provider}`;
+  };
+
   const SocialButton = ({ icon, label, provider }) => (
-  <button className="flex-1 flex items-center justify-center gap-2 bg-[#1e293b] border border-white/5 py-2.5 rounded-xl hover:bg-[#334155] transition-all">
-    {icon}
-    <span className="text-sm font-medium">{label}</span>
-  </button>
-);
+    <button
+      onClick={() => handleOAuthLogin(provider)}
+      className="flex-1 flex items-center justify-center gap-2 bg-[#1e293b] border border-white/5 py-2.5 rounded-xl hover:bg-[#334155] transition-all"
+    >
+      {icon}
+      <span className="text-sm font-medium">{label}</span>
+    </button>
+  );
 
   // Add this helper for the Google Icon if you don't have an SVG
   const GoogleIcon = () => (
@@ -114,9 +147,9 @@ const Auth = () => {
         </div>
 
         <div className="grid grid-cols-3 gap-3">
-          <SocialButton icon={<GoogleIcon />} label="Google" />
-          <SocialButton icon={<Github size={18} />} label="GitHub" />
-          <SocialButton icon={<Music size={18} className="text-green-500" />} label="Spotify" />
+          <SocialButton icon={<GoogleIcon />} label="Google" provider="google" />
+          <SocialButton icon={<Github size={18} />} label="GitHub" provider="github" />
+          <SocialButton icon={<Music size={18} className="text-green-500" />} label="Spotify" provider="spotify" />
         </div>
       </div>
 

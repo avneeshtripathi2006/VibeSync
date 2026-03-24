@@ -6,4 +6,5 @@ import java.util.List;
 public interface VibePostRepository extends JpaRepository<VibePost, Long> {
     // This naming convention tells Spring exactly what SQL to write!
     List<VibePost> findAllByOrderByCreatedAtDesc();
+    List<VibePost> findByUserIdOrderByCreatedAtDesc(Long userId);
 }

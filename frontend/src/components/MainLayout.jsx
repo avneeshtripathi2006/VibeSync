@@ -7,7 +7,8 @@ const MainLayout = ({ children }) => {
 
   const handleLogout = () => {
     localStorage.removeItem("token"); // 👈 Clear the session
-    navigate("/"); // 👈 Send back to Auth page
+    localStorage.clear(); // 👈 Clear all local storage
+    window.location.href = "/"; // 👈 Full page redirect to reset app state
   };
 
   return (
