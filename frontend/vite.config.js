@@ -11,4 +11,5 @@ export default defineConfig({
     // 👈 ADD THIS LINE: It maps 'global' to 'window'
     global: 'window', 
   },
+  base: '/VibeSync/'
 })
