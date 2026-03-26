@@ -1,0 +1,11 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = "vibe-engine/Dockerfile"
+
+[deploy]
+startCommand = "python main.py"
+healthcheckPath = "/ping"
+healthcheckTimeout = 200
+
+# Railway will automatically detect and use files from the vibe-engine directory
+# when this config is in the root
