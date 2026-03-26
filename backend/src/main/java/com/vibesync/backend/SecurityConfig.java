@@ -7,12 +7,13 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.config.Customizer;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.io.FileWriter;
 import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Configuration
@@ -69,11 +70,33 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.asList(
-            "http://localhost:5173",
-            "https://<username>.github.io",
-            "https://<your-frontend>.onrender.com"
-        ));
+        
+        // Build allowed origins from environment variables or defaults
+        List<String> allowedOrigins = new ArrayList<>();
+        allowedOrigins.add("http://localhost:5173"); // Local development
+        
+        // Add GitHub Pages URL if GITHUB_USERNAME is set
+        String githubUsername = System.getenv("GITHUB_USERNAME");
+        if (githubUsername != null && !githubUsername.isEmpty()) {
+            allowedOrigins.add("https://" + githubUsername + ".github.io");
+        } else {
+            // Default pattern for GitHub Pages (user will customize)
+            allowedOrigins.add("https://*.github.io");
+        }
+        
+        // Add Render backend/frontend production URL if set
+        String renderBackendDomain = System.getenv("RENDER_BACKEND_DOMAIN");
+        if (renderBackendDomain != null && !renderBackendDomain.isEmpty()) {
+            allowedOrigins.add("https://" + renderBackendDomain);
+        }
+        
+        // Add custom frontend URL if set
+        String customFrontendUrl = System.getenv("CUSTOM_FRONTEND_URL");
+        if (customFrontendUrl != null && !customFrontendUrl.isEmpty()) {
+            allowedOrigins.add(customFrontendUrl);
+        }
+        
+        configuration.setAllowedOriginPatterns(allowedOrigins);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);

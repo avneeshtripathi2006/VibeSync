@@ -60,4 +60,19 @@ public class AuthController {
     public RedirectView spotifyLogin() {
         return new RedirectView("/oauth2/authorization/spotify");
     }
+
+    @GetMapping("/test")
+    public String test() {
+        return "Backend is working! ✅";
+    }
+
+    @GetMapping("/test-db")
+    public String testDatabase() {
+        try {
+            long count = userRepository.count();
+            return "Database connected! ✅ Total users: " + count;
+        } catch (Exception e) {
+            return "Database ERROR: " + e.getMessage();
+        }
+    }
 }

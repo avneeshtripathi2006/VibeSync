@@ -66,16 +66,25 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             // Generate JWT token
             String token = jwtUtil.generateToken(user);
 
+            // Get frontend URL from environment or use default
+            String frontendUrl = System.getenv("FRONTEND_URL") != null ? 
+                                 System.getenv("FRONTEND_URL") : 
+                                 "http://localhost:5173";
+
             // Redirect to frontend with token
-            String redirectUrl = UriComponentsBuilder.fromUriString("http://localhost:5173/auth/oauth2/success")
+            String redirectUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/auth/oauth2/success")
                     .queryParam("token", token)
                     .queryParam("provider", provider)
                     .build().toUriString();
 
             getRedirectStrategy().sendRedirect(request, response, redirectUrl);
         } else {
+            // Get frontend URL from environment or use default
+            String frontendUrl = System.getenv("FRONTEND_URL") != null ? 
+                                 System.getenv("FRONTEND_URL") : 
+                                 "http://localhost:5173";
             // Redirect to error page
-            getRedirectStrategy().sendRedirect(request, response, "http://localhost:5173/?error=oauth_failed");
+            getRedirectStrategy().sendRedirect(request, response, frontendUrl + "/?error=oauth_failed");
         }
     }
 

@@ -1,0 +1,70 @@
+# Render Deployment Configuration for VibeSync Backend
+# Documentation: https://render.com/docs/infrastructure-as-code
+
+services:
+  - type: web
+    name: vibesync-backend
+    env: java
+    javaVersion: 21
+    buildCommand: ./mvnw clean package -DskipTests
+    startCommand: java -Xmx512M -Xms256M -jar target/backend-0.0.1-SNAPSHOT.jar
+    plan: free
+    
+    # Environment Variables (set these in Render Dashboard or here)
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: vibesync-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        value: postgres
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: vibesync-db
+          property: password
+      - key: JWT_SECRET
+        sync: false  # Must be set manually in Render Dashboard (secret variable)
+      - key: FRONTEND_URL
+        value: https://avneeshtripathi2006.github.io/VibeSync_Project
+      - key: WEBSOCKET_ORIGINS
+        value: https://avneeshtripathi2006.github.io/VibeSync_Project
+      - key: GITHUB_USERNAME
+        value: avneeshtripathi2006
+      - key: RENDER_BACKEND_DOMAIN
+        value: vibesync.onrender.com
+      - key: GOOGLE_CLIENT_ID
+        sync: false  # Must be set as secret in Render Dashboard
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false  # Must be set as secret in Render Dashboard
+      - key: GITHUB_CLIENT_ID
+        sync: false  # Must be set as secret in Render Dashboard
+      - key: GITHUB_CLIENT_SECRET
+        sync: false  # Must be set as secret in Render Dashboard
+      - key: SPOTIFY_CLIENT_ID
+        sync: false  # Must be set as secret in Render Dashboard
+      - key: SPOTIFY_CLIENT_SECRET
+        sync: false  # Must be set as secret in Render Dashboard
+
+databases:
+  - name: vibesync-db
+    databaseName: vibesync_db
+    user: postgres
+    plan: free
+    postgresMajorVersion: 16
+
+# IMPORTANT INSTRUCTIONS:
+# 1. Copy this render.yaml to the root of backend/ folder
+# 2. Commit and push to GitHub
+# 3. Go to https://dashboard.render.com/
+# 4. Create new "Web Service" from GitHub repo
+# 5. Select "Connect your own code"
+# 6. Choose the backend directory
+# 7. Set these SECRET environment variables in Render Dashboard:
+#    - JWT_SECRET
+#    - GOOGLE_CLIENT_ID
+#    - GOOGLE_CLIENT_SECRET
+#    - GITHUB_CLIENT_ID
+#    - GITHUB_CLIENT_SECRET
+#    - SPOTIFY_CLIENT_ID
+#    - SPOTIFY_CLIENT_SECRET
+# 8. Render will auto-deploy whenever you push to GitHub

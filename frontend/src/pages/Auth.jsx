@@ -33,18 +33,38 @@ const Auth = () => {
     }
   }, [navigate]);
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+  const LOCAL_API_URL = "http://localhost:8080";
+  const REMOTE_API_URL = import.meta.env.VITE_API_URL || "https://vibesync.onrender.com";
+
+  const [apiUrl, setApiUrl] = useState(LOCAL_API_URL);
+
+  useEffect(() => {
+    const chooseApiUrl = async () => {
+      try {
+        const res = await fetch(`${LOCAL_API_URL}/auth/test`, { method: 'GET', mode: 'cors' });
+        if (res.ok) {
+          setApiUrl(LOCAL_API_URL);
+          return;
+        }
+      } catch (_) {
+        // localhost not available
+      }
+      setApiUrl(REMOTE_API_URL);
+    };
+
+    chooseApiUrl();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const url = isLogin ? `${API_URL}/auth/login` : `${API_URL}/auth/signup`;
+    const url = isLogin ? `${apiUrl}/auth/login` : `${apiUrl}/auth/signup`;
     try {
       const response = await axios.post(url, formData);
       const data = response.data;
 
       // If it's a login and the response isn't an error message
       if (isLogin) {
-        if (data.includes("Error")) {
+        if (typeof data === 'string' && data.includes("Error")) {
           alert(data);
         } else {
           // 💾 This is the key part!
@@ -52,16 +72,17 @@ const Auth = () => {
           navigate("/home"); // 🚀 Redirect to home page
         }
       } else {
-        alert(data); // Shows "User registered successfully"
+        alert(typeof data === 'string' ? data : "User registered successfully!"); // Shows signup response
         setIsLogin(true); // Switch to login mode automatically
       }
     } catch (error) {
-      alert("Backend connection failed!");
+      console.error("Auth error:", error);
+      alert(error.response?.data || "Backend connection failed!");
     }
   };
 
   const handleOAuthLogin = (provider) => {
-    window.location.href = `${API_URL}/auth/oauth2/${provider}`;
+    window.location.href = `${apiUrl}/auth/oauth2/${provider}`;
   };
 
   const SocialButton = ({ icon, label, provider }) => (

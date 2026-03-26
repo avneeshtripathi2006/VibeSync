@@ -21,8 +21,24 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // 3. The URL where React will connect
+        // Get allowed origins from environment or use default
+        String allowedOriginsEnv = System.getenv("WEBSOCKET_ORIGINS");
+        String[] allowedOrigins;
+        
+        if (allowedOriginsEnv != null && !allowedOriginsEnv.isEmpty()) {
+            // Support multiple origins separated by comma
+            allowedOrigins = allowedOriginsEnv.split(",");
+            // Trim whitespace from each origin
+            for (int i = 0; i < allowedOrigins.length; i++) {
+                allowedOrigins[i] = allowedOrigins[i].trim();
+            }
+        } else {
+            // Default to localhost for local development
+            allowedOrigins = new String[]{"http://localhost:5173"};
+        }
+        
         registry.addEndpoint("/ws-vibe")
-                .setAllowedOrigins("http://localhost:5173")
+                .setAllowedOrigins(allowedOrigins)
                 .withSockJS();
     }
 }
