@@ -27,7 +27,7 @@
 
 | Service | Technology | Deployment | URL |
 |---------|-----------|-----------|-----|
-| **Backend** | Spring Boot 4.0.3 (Java 21) | Render | `https://vibesync.onrender.com` |
+| **Backend** | Spring Boot 4.0.3 (Java 21) | Render | `https://vibesync-zc9a.onrender.com` |
 | **Frontend** | React 19.2 + Vite | GitHub Pages | `https://avneeshtripathi2006.github.io/VibeSync` |
 | **Vibe-Engine** | FastAPI (Python 3.11) | Railway | `https://vibesync-engine.railway.app` |
 | **Database** | PostgreSQL (Supabase) | Supabase | `db.flitvcxgxlfnikkysmkj.supabase.co` |
@@ -205,7 +205,7 @@ SPRING_DATASOURCE_PASSWORD=Avneesh@2006
 3. Choose **Web application**
 4. Add **Authorized redirect URIs:**
    - Development: `http://localhost:8080/login/oauth2/code/google`
-   - Production: `https://vibesync.onrender.com/login/oauth2/code/google`
+   - Production: `https://vibesync-zc9a.onrender.com/login/oauth2/code/google`
 5. Click **Create** and copy:
    - **Client ID**
    - **Client Secret**
@@ -216,7 +216,7 @@ Set these environment variables:
 ```env
 GOOGLE_CLIENT_ID=your-client-id-here
 GOOGLE_CLIENT_SECRET=your-client-secret-here
-GOOGLE_OAUTH_REDIRECT_URI=https://vibesync.onrender.com/login/oauth2/code/google
+GOOGLE_OAUTH_REDIRECT_URI=https://vibesync-zc9a.onrender.com/login/oauth2/code/google
 ```
 
 ---
@@ -234,7 +234,7 @@ GOOGLE_OAUTH_REDIRECT_URI=https://vibesync.onrender.com/login/oauth2/code/google
      - Prod: `https://avneeshtripathi2006.github.io/VibeSync`
    - **Authorization callback URL:**
      - Dev: `http://localhost:8080/login/oauth2/code/github`
-     - Prod: `https://vibesync.onrender.com/login/oauth2/code/github`
+     - Prod: `https://vibesync-zc9a.onrender.com/login/oauth2/code/github`
 4. Click **Register application** and copy:
    - **Client ID**
    - **Client Secret**
@@ -245,7 +245,7 @@ Set these environment variables:
 ```env
 GITHUB_CLIENT_ID=your-client-id-here
 GITHUB_CLIENT_SECRET=your-client-secret-here
-GITHUB_OAUTH_REDIRECT_URI=https://vibesync.onrender.com/login/oauth2/code/github
+GITHUB_OAUTH_REDIRECT_URI=https://vibesync-zc9a.onrender.com/login/oauth2/code/github
 ```
 
 ---
@@ -264,7 +264,7 @@ GITHUB_OAUTH_REDIRECT_URI=https://vibesync.onrender.com/login/oauth2/code/github
 6. Go to **Edit Settings**
 7. Add **Redirect URIs:**
    - Dev: `http://localhost:8080/login/oauth2/code/spotify`
-   - Prod: `https://vibesync.onrender.com/login/oauth2/code/spotify`
+   - Prod: `https://vibesync-zc9a.onrender.com/login/oauth2/code/spotify`
 8. Click **Save** and copy:
    - **Client ID**
    - **Client Secret**
@@ -275,7 +275,7 @@ Set these environment variables:
 ```env
 SPOTIFY_CLIENT_ID=your-client-id-here
 SPOTIFY_CLIENT_SECRET=your-client-secret-here
-SPOTIFY_OAUTH_REDIRECT_URI=https://vibesync.onrender.com/login/oauth2/code/spotify
+SPOTIFY_OAUTH_REDIRECT_URI=https://vibesync-zc9a.onrender.com/login/oauth2/code/spotify
 ```
 
 ---
@@ -324,21 +324,21 @@ JWT_SECRET=vibesync-render-secret-at-least-32-characters-minimum
 ```
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
-GOOGLE_OAUTH_REDIRECT_URI=https://vibesync.onrender.com/login/oauth2/code/google
+GOOGLE_OAUTH_REDIRECT_URI=https://vibesync-zc9a.onrender.com/login/oauth2/code/google
 ```
 
 **GitHub OAuth (If configured):**
 ```
 GITHUB_CLIENT_ID=your-github-client-id
 GITHUB_CLIENT_SECRET=your-github-client-secret
-GITHUB_OAUTH_REDIRECT_URI=https://vibesync.onrender.com/login/oauth2/code/github
+GITHUB_OAUTH_REDIRECT_URI=https://vibesync-zc9a.onrender.com/login/oauth2/code/github
 ```
 
 **Spotify OAuth (If configured):**
 ```
 SPOTIFY_CLIENT_ID=your-spotify-client-id
 SPOTIFY_CLIENT_SECRET=your-spotify-client-secret
-SPOTIFY_OAUTH_REDIRECT_URI=https://vibesync.onrender.com/login/oauth2/code/spotify
+SPOTIFY_OAUTH_REDIRECT_URI=https://vibesync-zc9a.onrender.com/login/oauth2/code/spotify
 ```
 
 5. Click **"Save Changes"**
@@ -414,7 +414,7 @@ npm run deploy
 3. Add:
 
 ```
-BACKEND_URL=https://vibesync.onrender.com
+BACKEND_URL=https://vibesync-zc9a.onrender.com
 FLASK_ENV=production
 PORT=8000
 ```
@@ -464,10 +464,10 @@ PORT=8000
 
 **GitHub Pages:**
 - None required (static hosting)
-- Update `VITE_API_URL` in frontend build: `https://vibesync.onrender.com`
+- Update `VITE_API_URL` in frontend build: `https://vibesync-zc9a.onrender.com`
 
 **Railway Vibe-Engine:**
-- `BACKEND_URL=https://vibesync.onrender.com`
+- `BACKEND_URL=https://vibesync-zc9a.onrender.com`
 - `FLASK_ENV=production`
 - `PORT=8000`
 
@@ -508,7 +508,7 @@ PORT=8000
 1. Go to OAuth provider (Google/GitHub/Spotify)
 2. Update redirect URIs to match exactly:
    - Local: `http://localhost:8080/login/oauth2/code/{provider}`
-   - Production: `https://vibesync.onrender.com/login/oauth2/code/{provider}`
+   - Production: `https://vibesync-zc9a.onrender.com/login/oauth2/code/{provider}`
 3. Copy new Client ID and Secret
 4. Update environment variables on Render
 5. Trigger redeploy
@@ -537,7 +537,7 @@ PORT=8000
 **Solution:**
 1. Go to Railway dashboard → vibe-engine service
 2. Click **Variables**
-3. Verify: `BACKEND_URL=https://vibesync.onrender.com`
+3. Verify: `BACKEND_URL=https://vibesync-zc9a.onrender.com`
 4. Wait for auto-redeploy
 
 ---
@@ -562,7 +562,7 @@ PORT=8000
 
 | Service | URL | Status |
 |---------|-----|--------|
-| **Backend** | `https://vibesync.onrender.com` | ⏳ Waiting for env vars |
+| **Backend** | `https://vibesync-zc9a.onrender.com` | ⏳ Waiting for env vars |
 | **Frontend** | `https://avneeshtripathi2006.github.io/VibeSync` | ✅ Deployed |
 | **Vibe-Engine** | Railway auto-generated URL | ⏳ Check Railway dashboard |
 | **Database** | `db.flitvcxgxlfnikkysmkj.supabase.co` | ✅ Ready |
@@ -572,7 +572,7 @@ PORT=8000
 ## 📧 Support & Next Steps
 
 1. **Environment Variables MUST Be Set** - If backend still fails, double-check Render environment variables
-2. **Test Backend Health** - Visit: `https://vibesync.onrender.com/actuator/health`
+2. **Test Backend Health** - Visit: `https://vibesync-zc9a.onrender.com/actuator/health`
 3. **Test Frontend** - Visit: `https://avneeshtripathi2006.github.io/VibeSync`
 4. **Test OAuth** - Click OAuth buttons to verify redirect URIs work
 

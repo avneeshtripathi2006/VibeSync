@@ -7,7 +7,7 @@ import socket
 import time
 
 # Database connection parameters
-DB_HOST = 'db.flitvcxgxlfnikkysmkj.supabase.co'
+DB_HOST = 'db.gqneuzzwldinlnndhmbw.supabase.co'
 DB_PORT = 5432
 
 def test_tcp_connection(host, port, timeout=10):
@@ -15,24 +15,38 @@ def test_tcp_connection(host, port, timeout=10):
     try:
         print(f"🔄 Testing TCP connection to {host}:{port}...")
 
-        # Create socket
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(timeout)
-
-        start_time = time.time()
-        result = sock.connect_ex((host, port))
-        end_time = time.time()
-
-        sock.close()
-
-        if result == 0:
-            print("✅ TCP connection successful!")
-            print(".2f")
-            return True
-        else:
-            print("❌ TCP connection failed!")
-            print(f"Error code: {result}")
+        # Get address info for both IPv4 and IPv6
+        addrinfo = socket.getaddrinfo(host, port, socket.AF_UNSPEC, socket.SOCK_STREAM)
+        
+        if not addrinfo:
+            print("❌ No address info found!")
             return False
+
+        # Try each address
+        for family, socktype, proto, canonname, sockaddr in addrinfo:
+            try:
+                print(f"🔄 Trying {sockaddr[0]}...")
+                sock = socket.socket(family, socktype, proto)
+                sock.settimeout(timeout)
+                
+                start_time = time.time()
+                result = sock.connect_ex(sockaddr)
+                end_time = time.time()
+                
+                sock.close()
+                
+                if result == 0:
+                    print("✅ TCP connection successful!")
+                    print(".2f")
+                    return True
+                else:
+                    print(f"❌ Connection failed to {sockaddr[0]} (error: {result})")
+            except Exception as e:
+                print(f"❌ Failed to connect to {sockaddr[0]}: {e}")
+                continue
+
+        print("❌ All connection attempts failed!")
+        return False
 
     except socket.gaierror as e:
         print("❌ DNS resolution failed!")

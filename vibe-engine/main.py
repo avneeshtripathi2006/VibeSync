@@ -10,7 +10,7 @@ model = SentenceTransformer('all-MiniLM-L6-v2')
 
 # Local/remote backend URL policies
 DEFAULT_LOCAL_BACKEND = "http://localhost:8080"
-DEFAULT_REMOTE_BACKEND = os.getenv("BACKEND_URL", "https://vibesync.onrender.com")
+DEFAULT_REMOTE_BACKEND = os.getenv("BACKEND_URL", "https://vibesync-zc9a.onrender.com")
 BACKEND_HEALTH_PATH = "/actuator/health"
 
 async def resolve_backend_url() -> str:

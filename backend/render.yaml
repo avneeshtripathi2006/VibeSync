@@ -21,7 +21,7 @@ services:
       - key: GITHUB_USERNAME
         value: avneeshtripathi2006
       - key: RENDER_BACKEND_DOMAIN
-        value: vibesync.onrender.com
+        value: vibesync-zc9a.onrender.com
       - key: GOOGLE_CLIENT_SECRET
         sync: false  # Must be set as secret in Render Dashboard
       - key: GITHUB_CLIENT_ID

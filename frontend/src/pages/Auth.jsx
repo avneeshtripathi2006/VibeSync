@@ -34,7 +34,7 @@ const Auth = () => {
   }, [navigate]);
 
   const LOCAL_API_URL = "http://localhost:8080";
-  const REMOTE_API_URL = import.meta.env.VITE_API_URL || "https://vibesync.onrender.com";
+  const REMOTE_API_URL = import.meta.env.VITE_API_URL || "https://vibesync-zc9a.onrender.com";
 
   const [apiUrl, setApiUrl] = useState(LOCAL_API_URL);
 
