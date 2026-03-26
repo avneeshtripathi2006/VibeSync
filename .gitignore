@@ -31,3 +31,4 @@ Thumbs.db
 .env
 .env.example
 .env.production.local
+.md
