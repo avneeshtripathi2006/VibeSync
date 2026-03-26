@@ -3,7 +3,7 @@ builder = "dockerfile"
 dockerfilePath = "vibe-engine/Dockerfile"
 
 [deploy]
-startCommand = "python main.py"
+startCommand = "python vibe-engine/main.py"
 healthcheckPath = "/ping"
 healthcheckTimeout = 200
 
