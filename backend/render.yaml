@@ -10,24 +10,13 @@ services:
     startCommand: java -Xmx512M -Xms256M -jar target/backend-0.0.1-SNAPSHOT.jar
     plan: free
     
-    # Environment Variables (set these in Render Dashboard or here)
-    envVars:
-      - key: SPRING_DATASOURCE_URL
-        fromDatabase:
-          name: vibesync-db
-          property: connectionString
-      - key: SPRING_DATASOURCE_USERNAME
-        value: postgres
-      - key: SPRING_DATASOURCE_PASSWORD
-        fromDatabase:
-          name: vibesync-db
-          property: password
-      - key: JWT_SECRET
-        sync: false  # Must be set manually in Render Dashboard (secret variable)
-      - key: FRONTEND_URL
-        value: https://avneeshtripathi2006.github.io/VibeSync_Project
-      - key: WEBSOCKET_ORIGINS
-        value: https://avneeshtripathi2006.github.io/VibeSync_Project
+    # Environment Variables (set these in Render Dashboard - MUST be set manually!)
+    # Database using Supabase PostgreSQL - Set in Render Dashboard:
+    # SPRING_DATASOURCE_URL=jdbc:postgresql://db.flitvcxgxlfnikkysmkj.supabase.co:5432/postgres
+    # SPRING_DATASOURCE_USERNAME=postgres
+    # SPRING_DATASOURCE_PASSWORD=Avneesh@2006
+    # JWT_SECRET=your-secure-jwt-secret-here
+    # All OAuth credentials (GOOGLE_CLIENT_ID, GITHUB_CLIENT_ID, SPOTIFY_CLIENT_ID, etc.)
       - key: GITHUB_USERNAME
         value: avneeshtripathi2006
       - key: RENDER_BACKEND_DOMAIN
