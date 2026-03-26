@@ -3,6 +3,7 @@
 /backend/.mvn/
 /backend/.settings/
 /backend/.idea/
+/backend/.env
 /**/*.iml
 **/target/
 **/classpath
