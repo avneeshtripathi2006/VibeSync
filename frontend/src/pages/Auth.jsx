@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Github, Music } from "lucide-react"
+import { Github, Music, Loader } from "lucide-react"
 
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({ fullName: '', email: '', password: '' });
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Check for OAuth success callback
   useEffect(() => {
@@ -35,13 +37,14 @@ const Auth = () => {
 
   const LOCAL_API_URL = "http://localhost:8080";
   const REMOTE_API_URL = import.meta.env.VITE_API_URL || "https://vibesync-zc9a.onrender.com";
+  const API_TIMEOUT = parseInt(import.meta.env.VITE_API_TIMEOUT || "45000"); // 45 second timeout for Render cold start
 
   const [apiUrl, setApiUrl] = useState(LOCAL_API_URL);
 
   useEffect(() => {
     const chooseApiUrl = async () => {
       try {
-        const res = await fetch(`${LOCAL_API_URL}/auth/test`, { method: 'GET', mode: 'cors' });
+        const res = await fetch(`${LOCAL_API_URL}/auth/test`, { method: 'GET', mode: 'cors', timeout: 5000 });
         if (res.ok) {
           setApiUrl(LOCAL_API_URL);
           return;
@@ -57,27 +60,41 @@ const Auth = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setErrorMessage('');
+    
     const url = isLogin ? `${apiUrl}/auth/login` : `${apiUrl}/auth/signup`;
     try {
-      const response = await axios.post(url, formData);
+      const response = await axios.post(url, formData, {
+        timeout: API_TIMEOUT
+      });
       const data = response.data;
 
       // If it's a login and the response isn't an error message
       if (isLogin) {
         if (typeof data === 'string' && data.includes("Error")) {
-          alert(data);
+          setErrorMessage(data);
         } else {
           // 💾 This is the key part!
           localStorage.setItem("token", data); 
           navigate("/home"); // 🚀 Redirect to home page
         }
       } else {
-        alert(typeof data === 'string' ? data : "User registered successfully!"); // Shows signup response
+        setErrorMessage(typeof data === 'string' ? data : "User registered successfully!"); // Shows signup response
         setIsLogin(true); // Switch to login mode automatically
       }
     } catch (error) {
       console.error("Auth error:", error);
-      alert(error.response?.data || "Backend connection failed!");
+      
+      if (error.code === 'ECONNABORTED') {
+        setErrorMessage("Request timeout. Render backend may be waking up. Please try again in a few seconds.");
+      } else if (error.response?.status === 0 || error.message === 'Network Error') {
+        setErrorMessage("Backend is unreachable. Please check if backend is running at: " + apiUrl);
+      } else {
+        setErrorMessage(error.response?.data || error.message || "Connection failed. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -156,9 +173,26 @@ const Auth = () => {
             />
           </div>
 
-          <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-lg shadow-lg shadow-indigo-600/20 transition-all">
-            {isLogin ? "Sign in" : "Register"}
+          <button 
+            type="submit" 
+            disabled={isLoading}
+            className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-2"
+          >
+            {isLoading ? (
+              <>
+                <Loader size={18} className="animate-spin" />
+                {isLogin ? "Signing in..." : "Registering..."}
+              </>
+            ) : (
+              isLogin ? "Sign in" : "Register"
+            )}
           </button>
+
+          {errorMessage && (
+            <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-200 text-sm">
+              {errorMessage}
+            </div>
+          )}
         </form>
 
         <div className="relative flex items-center justify-center py-6">
