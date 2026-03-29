@@ -7,7 +7,7 @@ services:
     env: java
     javaVersion: 21
     buildCommand: ./mvnw clean package -DskipTests
-    startCommand: java -Xmx512M -Xms256M -jar target/backend-0.0.1-SNAPSHOT.jar
+    startCommand: java -Dserver.port=$PORT -Xmx512M -Xms256M -jar target/backend-0.0.1-SNAPSHOT.jar
     plan: free
     
     # Environment Variables (set these in Render Dashboard - MUST be set manually!)
