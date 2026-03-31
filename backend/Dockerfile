@@ -3,10 +3,11 @@ FROM maven:3.9.5-eclipse-temurin-21 AS build
 WORKDIR /app
 
 # Copy only needed files for Maven to minimize build context
-COPY backend/pom.xml ./
-COPY backend/src ./src
-COPY backend/mvnw ./
-COPY backend/.mvn ./.mvn
+# When Render/CI sets backend folder as build context, these paths are just local.
+COPY pom.xml ./
+COPY src ./src
+COPY mvnw ./
+COPY .mvn ./.mvn
 
 RUN chmod +x ./mvnw
 
