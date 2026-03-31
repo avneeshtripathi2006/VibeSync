@@ -1,12 +1,14 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from sentence_transformers import SentenceTransformer
 import os
 import httpx
 
+from sentence_transformers import SentenceTransformer
+
 app = FastAPI()
 # This is the "Brain" - it converts text to numbers
-model = SentenceTransformer('all-MiniLM-L6-v2')
+model = None
+MODEL_NAME = os.getenv("SENTENCE_TRANSFORMER_MODEL", "all-MiniLM-L6-v2")
 
 # Local/remote backend URL policies
 DEFAULT_LOCAL_BACKEND = "http://localhost:8080"
@@ -42,10 +44,17 @@ async def backend_url():
     url = await resolve_backend_url()
     return {"backendUrl": url}
 
+def get_model():
+    global model
+    if model is None:
+        model = SentenceTransformer(MODEL_NAME)
+    return model
+
 @app.post("/embed")
 async def get_embedding(request: BioRequest):
     # This turns the bio into 384 numbers!
-    embedding = model.encode(request.text).tolist()
+    engine = get_model()
+    embedding = engine.encode(request.text).tolist()
     return {"embedding": embedding}
 
 @app.get("/ping")
