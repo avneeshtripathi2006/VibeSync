@@ -1,8 +1,6 @@
-fastapi==0.104.1
+fastapi==0.111.1
 uvicorn[standard]==0.24.0
-pydantic==2.5.0
-sentence-transformers==3.0.1
-torch==2.4.1 --index-url https://download.pytorch.org/whl/cpu
+pydantic==2.8.1
 httpx==0.25.1
-requests==2.31.0
-numpy<2
+requests==2.31.1
+numpy==1.26.2

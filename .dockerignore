@@ -1,0 +1,15 @@
+.git
+**/node_modules
+**/target
+**/frontend/dist
+**/.idea
+**/.vscode
+**/*.log
+**/.DS_Store
+**/build
+**/tmp
+**/*.tmp
+**/*cache*
+frontend/node_modules
+backend/target
+vibe-engine/__pycache__

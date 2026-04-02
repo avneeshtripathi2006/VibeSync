@@ -96,6 +96,12 @@ public class SecurityConfig {
             allowedOrigins.add(customFrontendUrl);
         }
         
+        // Add explicit frontend URL if set (preferred for production)
+        String frontendUrl = System.getenv("FRONTEND_URL");
+        if (frontendUrl != null && !frontendUrl.isEmpty()) {
+            allowedOrigins.add(frontendUrl);
+        }
+        
         configuration.setAllowedOriginPatterns(allowedOrigins);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));

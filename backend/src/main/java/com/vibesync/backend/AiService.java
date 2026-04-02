@@ -9,12 +9,24 @@ import java.util.List;
 public class AiService {
     // Reuse the same "Worker" for every request
     private static final RestTemplate restTemplate = new RestTemplate(); 
-    private final String PYTHON_URL = "http://localhost:8000/embed";
+
+    private final String aiServiceUrl;
+
+    public AiService() {
+        // Prefer env var for configurable production URL
+        String envUrl = System.getenv("AI_SERVICE_URL");
+        if (envUrl != null && !envUrl.isBlank()) {
+            this.aiServiceUrl = envUrl;
+        } else {
+            // local dev fallback
+            this.aiServiceUrl = "http://localhost:8000";
+        }
+    }
 
     public String getEmbedding(String text) {
         try {
             Map<String, String> request = Map.of("text", text);
-            Map<String, Object> response = restTemplate.postForObject(PYTHON_URL, request, Map.class);
+            Map<String, Object> response = restTemplate.postForObject(aiServiceUrl + "/embed", request, Map.class);
 
             List<Double> list = (List<Double>) response.get("embedding");
             // This converts the list [1, 2] into the string "[1, 2]"
