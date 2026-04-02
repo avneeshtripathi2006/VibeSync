@@ -6,7 +6,22 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, Sparkles, MessageCircle, X } from "lucide-react";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080";
-const WS_BASE = import.meta.env.VITE_WS_URL || API_BASE.replace(/^http/i, "ws") + "/ws-vibe";
+
+const normalizeWsUrl = (url) => {
+  if (!url || !url.trim()) return null;
+  let trimmed = url.trim();
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed.replace(/^http:\/\//i, "ws://").replace(/^https:\/\//i, "wss://");
+  }
+  if (/^wss?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+  // fallback to host-path style: 0.0.0.0:8080/ws-vibe
+  return `wss://${trimmed}`;
+};
+
+const defaultWs = `${API_BASE.replace(/^http/i, "ws")}/ws-vibe`;
+const WS_BASE = normalizeWsUrl(import.meta.env.VITE_WS_URL) || normalizeWsUrl(defaultWs);
 let stompClient = null;
 
 const Matches = () => {
@@ -23,9 +38,12 @@ const Matches = () => {
   try {
     myData = token ? JSON.parse(atob(token.split(".")[1])) : null;
   } catch (e) {
+    console.error("Token parsing failed:", e);
     myData = null;
   }
   const myId = myData?.userId;
+
+  console.log("Home component rendered", { token: !!token, myId, myData });
 
   const blurAmount = Math.max(0, 20 - chatHistory.length * 0.4);
   const progress = Math.min(100, (chatHistory.length / 50) * 100);
@@ -36,11 +54,13 @@ const Matches = () => {
   useEffect(() => { scrollToBottom(); }, [chatHistory, selectedUser]);
 
   const findMatches = async () => {
+    console.log("Finding matches...");
     setLoading(true);
     try {
       const res = await axios.get(`${API_BASE}/api/profile/matches`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      console.log("Matches response:", res.data);
       setMatches(res.data);
     } catch (err) {
       console.error("Match fetch failed", err);
@@ -131,7 +151,7 @@ const handlePostVibe = async () => {
 
   try {
     const token = localStorage.getItem("token");
-    await axios.post("http://localhost:8080/api/posts/create", postContent, {
+    await axios.post(`${API_BASE}/api/posts/create`, postContent, {
       headers: { 
         "Authorization": `Bearer ${token}`,
         "Content-Type": "text/plain" // Sending raw string from @RequestBody
@@ -149,6 +169,11 @@ const handlePostVibe = async () => {
   // --- UI RENDER ---
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
+      {loading && (
+        <div className="fixed top-4 right-4 bg-indigo-600 text-white px-4 py-2 rounded-lg z-50">
+          Loading matches...
+        </div>
+      )}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* 📝 LEFT/CENTER: THE VIBE FEED (66% Width) */}
@@ -169,6 +194,12 @@ const handlePostVibe = async () => {
           </motion.div>
 
           {/* Replace dummy posts with this mapping */}
+          {posts.length === 0 && (
+            <div className="text-center py-8 text-slate-500">
+              <p>No posts yet.</p>
+              <p className="text-sm">Share your first vibe!</p>
+            </div>
+          )}
 {posts.map((post) => (
   <motion.div 
     key={post.id}
@@ -200,6 +231,12 @@ const handlePostVibe = async () => {
           </div>
           
           <div className="space-y-3">
+            {matches.length === 0 && !loading && (
+              <div className="text-center py-8 text-slate-500">
+                <p>No matches found yet.</p>
+                <p className="text-sm">Complete your profile to get better matches!</p>
+              </div>
+            )}
             {matches.map((m, i) => (
               <motion.div key={i} whileHover={{ x: 5 }} onClick={() => openChat(m)} className="flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all cursor-pointer group">
                 <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${m.fullName}`} className="w-12 h-12 rounded-full bg-slate-800 border border-indigo-500/20" />

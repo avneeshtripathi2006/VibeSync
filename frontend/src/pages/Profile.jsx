@@ -28,7 +28,7 @@ const Profile = () => {
       });
 
       // Refresh profile data after save
-      const profileRes = await axios.get("http://localhost:8080/api/profile/my", {
+      const profileRes = await axios.get(`${API_BASE}/api/profile/my`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUser(profileRes.data);
