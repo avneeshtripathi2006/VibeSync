@@ -5,6 +5,9 @@ import Stomp from "stompjs";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, X } from "lucide-react";
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080";
+const WS_BASE = import.meta.env.VITE_WS_URL || API_BASE.replace(/^http/i, "ws") + "/ws-vibe";
+
 let stompClient = null;
 
 const Messages = () => {
@@ -16,7 +19,12 @@ const Messages = () => {
   const chatEndRef = useRef(null);
 
   const token = localStorage.getItem("token");
-  const myData = token ? JSON.parse(atob(token.split(".")[1])) : null;
+  let myData = null;
+  try {
+    myData = token ? JSON.parse(atob(token.split(".")[1])) : null;
+  } catch (e) {
+    myData = null;
+  }
   const myId = myData?.userId;
 
   const blurAmount = Math.max(0, 20 - chatHistory.length * 0.4);
@@ -31,7 +39,7 @@ const Messages = () => {
   const findMatches = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:8080/api/profile/matches", {
+      const res = await axios.get(`${API_BASE}/api/profile/matches`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setMatches(res.data);
@@ -44,7 +52,7 @@ const Messages = () => {
 
   const connect = () => {
     if (stompClient?.connected) return;
-    const socket = new SockJS("http://localhost:8080/ws-vibe");
+    const socket = new SockJS(WS_BASE);
     stompClient = Stomp.over(socket);
     stompClient.debug = null;
     stompClient.connect({}, () => {
@@ -68,7 +76,7 @@ const Messages = () => {
   const openChat = async (user) => {
     setSelectedUser(user);
     try {
-      const res = await axios.get(`http://localhost:8080/api/chat/history/${user.userId}`, {
+      const res = await axios.get(`${API_BASE}/api/chat/history/${user.userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setChatHistory(res.data);

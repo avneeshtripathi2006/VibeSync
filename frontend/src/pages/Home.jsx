@@ -5,6 +5,8 @@ import Stomp from "stompjs";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Sparkles, MessageCircle, X } from "lucide-react";
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080";
+const WS_BASE = import.meta.env.VITE_WS_URL || API_BASE.replace(/^http/i, "ws") + "/ws-vibe";
 let stompClient = null;
 
 const Matches = () => {
@@ -17,7 +19,12 @@ const Matches = () => {
   const chatEndRef = useRef(null);
 
   const token = localStorage.getItem("token");
-  const myData = token ? JSON.parse(atob(token.split(".")[1])) : null;
+  let myData = null;
+  try {
+    myData = token ? JSON.parse(atob(token.split(".")[1])) : null;
+  } catch (e) {
+    myData = null;
+  }
   const myId = myData?.userId;
 
   const blurAmount = Math.max(0, 20 - chatHistory.length * 0.4);
@@ -31,7 +38,7 @@ const Matches = () => {
   const findMatches = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:8080/api/profile/matches", {
+      const res = await axios.get(`${API_BASE}/api/profile/matches`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setMatches(res.data);
@@ -46,7 +53,7 @@ const Matches = () => {
 
   const connect = () => {
     if (stompClient?.connected) return;
-    const socket = new SockJS("http://localhost:8080/ws-vibe");
+    const socket = new SockJS(WS_BASE);
     stompClient = Stomp.over(socket);
     stompClient.debug = null;
     stompClient.connect({}, () => {
@@ -71,7 +78,7 @@ const Matches = () => {
   const openChat = async (user) => {
     setSelectedUser(user);
     try {
-      const res = await axios.get(`http://localhost:8080/api/chat/history/${user.userId}`, {
+      const res = await axios.get(`${API_BASE}/api/chat/history/${user.userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setChatHistory(res.data);
@@ -98,7 +105,7 @@ const fetchPosts = async () => {
       fetch('http://127.0.0.1:7486/ingest/acfb494f-e1a9-47f6-8548-4a7650be671c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'134bb9'},body:JSON.stringify({sessionId:'134bb9',runId:'verify',location:'frontend/src/pages/Home.jsx:fetchPosts:start',message:'starting posts request',data:{tokenPresent:!!token},timestamp:Date.now()})}).catch(()=>{});
       // #endregion
 
-      const res = await axios.get("http://localhost:8080/api/posts/all", {
+      const res = await axios.get(`${API_BASE}/api/posts/all`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPosts(res.data);

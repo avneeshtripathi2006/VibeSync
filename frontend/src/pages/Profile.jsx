@@ -3,6 +3,8 @@ import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { Settings, Edit2, Grid, Bookmark, Tag, ChevronUp, ChevronDown } from "lucide-react";
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
 const Profile = () => {
   const [user, setUser] = useState(null);
   const [userPosts, setUserPosts] = useState([]);
@@ -17,7 +19,7 @@ const Profile = () => {
     if (!token) return;
     setSaving(true);
     try {
-      await axios.post("http://localhost:8080/api/profile/update", {
+      await axios.post(`${API_BASE}/api/profile/update`, {
         bio,
         vibeTags,
         profilePicUrl,
@@ -49,7 +51,7 @@ const Profile = () => {
         // #endregion
 
         // Fetch User Info
-        const profileRes = await axios.get("http://localhost:8080/api/profile/my", {
+        const profileRes = await axios.get(`${API_BASE}/api/profile/my`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUser(profileRes.data);
@@ -66,7 +68,7 @@ const Profile = () => {
         fetch('http://127.0.0.1:7486/ingest/acfb494f-e1a9-47f6-8548-4a7650be671c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'134bb9'},body:JSON.stringify({sessionId:'134bb9',location:'frontend/src/pages/Profile.jsx:fetchProfileData:postsRequest',message:'posts request',data:{endpoint:'/api/posts/my-posts',tokenPresent:!!token},timestamp:Date.now()})}).catch(()=>{});
         // #endregion
 
-        const postsRes = await axios.get("http://localhost:8080/api/posts/my-posts", {
+        const postsRes = await axios.get(`${API_BASE}/api/posts/my-posts`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUserPosts(postsRes.data);

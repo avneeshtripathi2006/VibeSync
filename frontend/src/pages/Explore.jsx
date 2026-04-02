@@ -3,6 +3,8 @@ import axios from "axios";
 import { motion } from "framer-motion";
 import { Heart, MessageCircle } from "lucide-react";
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
 const Explore = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -11,7 +13,7 @@ const Explore = () => {
   const fetchAllPosts = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:8080/api/posts/all", {
+      const res = await axios.get(`${API_BASE}/api/posts/all`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPosts(res.data);
