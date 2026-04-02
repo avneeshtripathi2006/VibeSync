@@ -3,7 +3,7 @@ builder = "dockerfile"
 dockerfilePath = "vibe-engine/Dockerfile"
 
 [deploy]
-startCommand = "python vibe-engine/main.py"
+startCommand = "uvicorn main:app --host 0.0.0.0 --port $PORT"
 healthcheckPath = "/ping"
 healthcheckTimeout = 200
 
