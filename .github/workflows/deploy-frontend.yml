@@ -2,7 +2,7 @@ name: Deploy Frontend to GitHub Pages
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
     paths:
       - 'frontend/**'
       - '.github/workflows/deploy-frontend.yml'
@@ -13,16 +13,22 @@ permissions:
   pages: write
   id-token: write
 
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'npm'
@@ -31,12 +37,21 @@ jobs:
       - name: Install dependencies
         run: cd frontend && npm ci
 
+      # GitHub Pages project sites live under /RepoName/ — Vite must use the same base or JS/CSS 404.
+      - name: Resolve Vite base path
+        id: vite_base
+        run: |
+          BP='${{ secrets.VITE_BASE_PATH }}'
+          if [ -z "$BP" ]; then BP='/VibeSync/'; fi
+          echo "path=$BP" >> "$GITHUB_OUTPUT"
+          echo "Using VITE_BASE_PATH=$BP"
+
       - name: Build with production config
         run: cd frontend && npm run build
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
           VITE_WS_URL: ${{ secrets.VITE_WS_URL }}
-          VITE_BASE_PATH: ${{ secrets.VITE_BASE_PATH }}
+          VITE_BASE_PATH: ${{ steps.vite_base.outputs.path }}
           VITE_API_TIMEOUT: 45000
 
       - name: Setup Pages
@@ -45,8 +60,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'frontend/dist'
+          path: frontend/dist
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v3
+        uses: actions/deploy-pages@v4
