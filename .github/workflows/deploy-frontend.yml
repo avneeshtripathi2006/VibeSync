@@ -46,11 +46,23 @@ jobs:
           echo "path=$BP" >> "$GITHUB_OUTPUT"
           echo "Using VITE_BASE_PATH=$BP"
 
+      # If secrets are empty, baked-in bundle falls back to localhost — set defaults for this deploy target.
+      - name: Resolve API URLs for Pages build
+        id: api_urls
+        run: |
+          API='${{ secrets.VITE_API_URL }}'
+          WS='${{ secrets.VITE_WS_URL }}'
+          if [ -z "$API" ]; then API='https://vibesync-zc9a.onrender.com'; fi
+          if [ -z "$WS" ]; then WS='wss://vibesync-zc9a.onrender.com/ws-vibe'; fi
+          echo "api_url=$API" >> "$GITHUB_OUTPUT"
+          echo "ws_url=$WS" >> "$GITHUB_OUTPUT"
+          echo "Using VITE_API_URL=$API"
+
       - name: Build with production config
         run: cd frontend && npm run build
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
-          VITE_WS_URL: ${{ secrets.VITE_WS_URL }}
+          VITE_API_URL: ${{ steps.api_urls.outputs.api_url }}
+          VITE_WS_URL: ${{ steps.api_urls.outputs.ws_url }}
           VITE_BASE_PATH: ${{ steps.vite_base.outputs.path }}
           VITE_API_TIMEOUT: 45000
 
