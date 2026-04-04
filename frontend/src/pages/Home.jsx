@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, Sparkles, MessageCircle, X } from "lucide-react";
 import { getApiBase } from "../config/env.js";
 import { getMyUserIdFromToken } from "../utils/jwt.js";
+import { formatMatchPercent } from "../utils/matchPercent.js";
+import { sendChatViaRest } from "../api/chatSend.js";
 import { useStompConnection } from "../hooks/useStompConnection.js";
 import { useToast } from "../context/ToastContext.jsx";
 
@@ -65,7 +67,7 @@ const Matches = () => {
     }
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const text = message.trim();
     if (!text || !myId || !selectedUser) return;
     const payload = {
@@ -73,16 +75,18 @@ const Matches = () => {
       receiverId: selectedUser.userId,
       content: text,
     };
-    const ok = sendChat(payload);
-    if (!ok) {
-      showToast(
-        wsStatus === "connecting"
-          ? "Connecting to chat… try again in a few seconds."
-          : "Chat is offline. Wait for reconnect or refresh the page."
-      );
+    if (sendChat(payload)) {
+      setMessage("");
       return;
     }
-    setMessage("");
+    try {
+      const saved = await sendChatViaRest(getApiBase, token, selectedUser.userId, text);
+      setChatHistory((prev) => [...prev, saved]);
+      setMessage("");
+    } catch (e) {
+      console.error(e);
+      showToast("Could not send message. Check your connection and try again.");
+    }
   };
 
   const [posts, setPosts] = useState([]);
@@ -139,9 +143,10 @@ const Matches = () => {
         </div>
       )}
 
-      {wsStatus === "error" && (
-        <div className="mb-4 rounded-2xl border border-red-500/25 bg-red-500/10 px-4 py-2 text-xs text-red-200">
-          Live chat could not connect after several tries. Refresh the page or check your network.
+      {wsStatus === "connecting" && (
+        <div className="mb-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-slate-300">
+          Connecting live updates… You can still <strong className="text-slate-200">send messages</strong> — they
+          are delivered through the server.
         </div>
       )}
 
@@ -247,8 +252,11 @@ const Matches = () => {
                 />
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm text-white truncate">{m.fullName}</p>
-                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">
-                    {Math.round((1 - m.distance) * 100)}% Match
+                  <p
+                    className="text-[10px] text-slate-500 font-bold uppercase tracking-tight"
+                    title={formatMatchPercent(m.distance).title}
+                  >
+                    {formatMatchPercent(m.distance).label} match
                   </p>
                 </div>
                 <MessageCircle size={18} className="text-slate-500 group-hover:text-indigo-400 shrink-0" />

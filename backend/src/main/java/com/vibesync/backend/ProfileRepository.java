@@ -32,11 +32,13 @@ public interface ProfileRepository extends JpaRepository<VibeProfile, Long> {
             @Param("vector") String vector,
             @Param("profilePicUrl") String profilePicUrl);
 
-    @Query(value = "SELECT u.id as userId, u.full_name as fullName, vp.bio as bio, vp.vibe_tags as vibeTags, " + // 👈 Added u.id
-               "(vp.bio_vector <=> (SELECT bio_vector FROM vibe_profiles WHERE user_id = :userId)) as distance " +
+    @Query(value = "SELECT u.id as userId, u.full_name as fullName, vp.bio as bio, vp.vibe_tags as vibeTags, " +
+               "(vp.bio_vector <=> me.bio_vector) as distance " +
                "FROM vibe_profiles vp " +
                "JOIN users u ON vp.user_id = u.id " +
+               "CROSS JOIN (SELECT bio_vector FROM vibe_profiles WHERE user_id = :userId) me " +
                "WHERE vp.user_id != :userId " +
+               "AND vp.bio_vector IS NOT NULL AND me.bio_vector IS NOT NULL " +
                "ORDER BY distance ASC LIMIT 5", nativeQuery = true)
 List<MatchProjection> findTopMatches(@Param("userId") Long userId);
 }

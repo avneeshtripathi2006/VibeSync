@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { Send, X, ChevronLeft } from "lucide-react";
 import { getApiBase } from "../config/env.js";
 import { getMyUserIdFromToken } from "../utils/jwt.js";
+import { formatMatchPercent } from "../utils/matchPercent.js";
+import { sendChatViaRest } from "../api/chatSend.js";
 import { useStompConnection } from "../hooks/useStompConnection.js";
 import { useToast } from "../context/ToastContext.jsx";
 
@@ -64,23 +66,22 @@ const Messages = () => {
     }
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const text = message.trim();
     if (!text || !myId || !selectedUser) return;
-    const ok = sendChat({
-      senderId: myId,
-      receiverId: selectedUser.userId,
-      content: text,
-    });
-    if (!ok) {
-      showToast(
-        wsStatus === "connecting"
-          ? "Connecting… try again in a few seconds."
-          : "Not connected. Refresh the page or check your network."
-      );
+    const payload = { senderId: myId, receiverId: selectedUser.userId, content: text };
+    if (sendChat(payload)) {
+      setMessage("");
       return;
     }
-    setMessage("");
+    try {
+      const saved = await sendChatViaRest(getApiBase, token, selectedUser.userId, text);
+      setChatHistory((prev) => [...prev, saved]);
+      setMessage("");
+    } catch (e) {
+      console.error(e);
+      showToast("Could not send message. Check your connection and try again.");
+    }
   };
 
   return (
@@ -96,9 +97,9 @@ const Messages = () => {
         </div>
       )}
 
-      {wsStatus === "error" && (
-        <div className="mb-4 rounded-2xl border border-red-500/25 bg-red-500/10 px-4 py-2 text-xs text-red-200">
-          Chat could not connect. Pull to refresh or reload the page.
+      {wsStatus === "connecting" && (
+        <div className="mb-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-slate-300">
+          Connecting live updates… <strong className="text-slate-200">Sending still works</strong> via the server.
         </div>
       )}
 
@@ -137,7 +138,9 @@ const Messages = () => {
                   />
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm text-white truncate">{m.fullName}</p>
-                    <p className="text-[10px] text-slate-500">{Math.round((1 - m.distance) * 100)}% Match</p>
+                    <p className="text-[10px] text-slate-500" title={formatMatchPercent(m.distance).title}>
+                      {formatMatchPercent(m.distance).label} match
+                    </p>
                   </div>
                 </motion.div>
               ))
@@ -169,8 +172,8 @@ const Messages = () => {
                     </button>
                     <div className="min-w-0">
                       <h2 className="text-base sm:text-lg font-bold text-white truncate">{selectedUser.fullName}</h2>
-                      <p className="text-xs text-slate-500">
-                        {Math.round((1 - selectedUser.distance) * 100)}% Vibe Match
+                      <p className="text-xs text-slate-500" title={formatMatchPercent(selectedUser.distance).title}>
+                        {formatMatchPercent(selectedUser.distance).label} vibe match
                       </p>
                     </div>
                   </div>

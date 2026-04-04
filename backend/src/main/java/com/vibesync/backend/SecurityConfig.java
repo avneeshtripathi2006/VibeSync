@@ -39,7 +39,7 @@ public class SecurityConfig {
      */
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers("/api/posts/**");
+        return (web) -> web.ignoring().requestMatchers("/api/posts/**", "/api/chat/**", "/ws-vibe/**");
     }
 
     @Bean

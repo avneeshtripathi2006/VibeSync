@@ -8,6 +8,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/chat")
+@CrossOrigin("*")
 public class ChatController {
 
     @Autowired
@@ -26,7 +27,10 @@ public class ChatController {
         User sender = userRepository.findByEmail(email);
 
         msg.setSenderId(sender.getId());
-        return messageRepository.save(msg);
+        Message saved = messageRepository.save(msg);
+        messagingTemplate.convertAndSend("/topic/messages/" + saved.getReceiverId(), saved);
+        messagingTemplate.convertAndSend("/topic/messages/" + saved.getSenderId(), saved);
+        return saved;
     }
 
     @GetMapping("/history/{receiverId}")
