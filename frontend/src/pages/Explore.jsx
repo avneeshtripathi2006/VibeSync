@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
 import { Heart, MessageCircle } from "lucide-react";
-import { API_BASE } from "../config/env.js";
+import { getApiBase } from "../config/env.js";
 
 const Explore = () => {
   const [posts, setPosts] = useState([]);
@@ -12,7 +12,7 @@ const Explore = () => {
   const fetchAllPosts = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE}/api/posts/all`, {
+      const res = await axios.get(`${getApiBase()}/api/posts/all`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPosts(res.data);

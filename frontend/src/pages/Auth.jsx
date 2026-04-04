@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Github, Music, Loader } from "lucide-react"
-import { LOCAL_API_URL, API_BASE, API_TIMEOUT_MS } from '../config/env.js'
+import { LOCAL_API_URL, getApiBase, API_TIMEOUT_MS } from '../config/env.js'
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -36,8 +36,8 @@ const Auth = () => {
     }
   }, [navigate]);
 
-  // Production (e.g. GitHub Pages): API_BASE already points at Render — do not probe localhost.
-  const [apiUrl, setApiUrl] = useState(API_BASE);
+  // Production: getApiBase() resolves after load (GitHub Pages → Render). Dev may probe localhost.
+  const [apiUrl, setApiUrl] = useState(() => getApiBase());
 
   useEffect(() => {
     if (!import.meta.env.DEV) return;
@@ -56,7 +56,7 @@ const Auth = () => {
       } finally {
         window.clearTimeout(tid);
       }
-      setApiUrl(API_BASE);
+      setApiUrl(getApiBase());
     };
 
     chooseApiUrl();

@@ -1,6 +1,6 @@
 /**
- * API resolution + SockJS endpoint.
- * SockJS must receive http(s)://…/ws-vibe — never ws: or wss: (browser URL APIs reject them).
+ * SockJS must use http(s)://…/ws-vibe (never ws:/wss:).
+ * Use getApiBase() / getSockJsUrl() at request time so the first paint sees the real window.location (GitHub Pages).
  */
 
 const trim = (s) => (typeof s === "string" ? s.trim() : "");
@@ -14,27 +14,22 @@ export const REMOTE_API_URL = trim(import.meta.env.VITE_API_URL);
 
 export const API_TIMEOUT_MS = parseInt(import.meta.env.VITE_API_TIMEOUT || "45000", 10);
 
-const viteApi = trim(import.meta.env.VITE_API_URL);
-
 function isGithubPagesHost() {
   if (typeof window === "undefined") return false;
   const h = window.location.hostname;
   return h === "github.io" || h.endsWith(".github.io");
 }
 
-function runtimePublicApiBase() {
-  if (import.meta.env.DEV) return "";
-  if (!isGithubPagesHost()) return "";
-  return GITHUB_PAGES_API_FALLBACK;
+/** Resolve at call time (not module load) — avoids first-visit races on GitHub Pages. */
+export function getApiBase() {
+  const viteApi = trim(import.meta.env.VITE_API_URL);
+  if (viteApi) return viteApi;
+  if (!import.meta.env.DEV && isGithubPagesHost()) {
+    return GITHUB_PAGES_API_FALLBACK;
+  }
+  return LOCAL_API_URL;
 }
 
-const resolvedApiBase = viteApi || runtimePublicApiBase() || LOCAL_API_URL;
-
-export const API_BASE = resolvedApiBase;
-
-/**
- * VITE_WS_URL may be ws/wss; SockJS needs the matching http/https URL to the same host and path.
- */
 function toSockJsHttpUrl(url) {
   if (!url) return null;
   let u = url.trim();
@@ -45,7 +40,8 @@ function toSockJsHttpUrl(url) {
   return u;
 }
 
-const viteWsRaw = trim(import.meta.env.VITE_WS_URL);
-
-/** Pass this to `new SockJS(...)` only — http(s) scheme, /ws-vibe path */
-export const SOCKJS_URL = toSockJsHttpUrl(viteWsRaw) || `${resolvedApiBase.replace(/\/$/, "")}/ws-vibe`;
+export function getSockJsUrl() {
+  const viteWsRaw = trim(import.meta.env.VITE_WS_URL);
+  const api = getApiBase();
+  return toSockJsHttpUrl(viteWsRaw) || `${api.replace(/\/$/, "")}/ws-vibe`;
+}

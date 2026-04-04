@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { Settings, Edit2, Grid, Bookmark, Tag, ChevronUp, ChevronDown } from "lucide-react";
-import { API_BASE } from "../config/env.js";
+import { getApiBase } from "../config/env.js";
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -18,7 +18,7 @@ const Profile = () => {
     if (!token) return;
     setSaving(true);
     try {
-      await axios.post(`${API_BASE}/api/profile/update`, {
+      await axios.post(`${getApiBase()}/api/profile/update`, {
         bio,
         vibeTags,
         profilePicUrl,
@@ -27,7 +27,7 @@ const Profile = () => {
       });
 
       // Refresh profile data after save
-      const profileRes = await axios.get(`${API_BASE}/api/profile/my`, {
+      const profileRes = await axios.get(`${getApiBase()}/api/profile/my`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUser(profileRes.data);
@@ -46,7 +46,7 @@ const Profile = () => {
     const fetchProfileData = async () => {
       try {
         // Fetch User Info
-        const profileRes = await axios.get(`${API_BASE}/api/profile/my`, {
+        const profileRes = await axios.get(`${getApiBase()}/api/profile/my`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUser(profileRes.data);
@@ -55,7 +55,7 @@ const Profile = () => {
         setProfilePicUrl(profileRes.data.profilePicUrl || "");
 
         // Fetch only THIS user's posts
-        const postsRes = await axios.get(`${API_BASE}/api/posts/my-posts`, {
+        const postsRes = await axios.get(`${getApiBase()}/api/posts/my-posts`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUserPosts(postsRes.data);

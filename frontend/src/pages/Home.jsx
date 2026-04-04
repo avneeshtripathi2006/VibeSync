@@ -4,9 +4,7 @@ import SockJS from "sockjs-client";
 import Stomp from "stompjs";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Sparkles, MessageCircle, X } from "lucide-react";
-import { API_BASE, SOCKJS_URL } from "../config/env.js";
-
-let stompClient = null;
+import { getApiBase, getSockJsUrl } from "../config/env.js";
 
 const Matches = () => {
   // --- STATE & REFS ---
@@ -16,6 +14,7 @@ const Matches = () => {
   const [message, setMessage] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
   const chatEndRef = useRef(null);
+  const stompRef = useRef(null);
 
   const token = localStorage.getItem("token");
   let myData = null;
@@ -41,7 +40,7 @@ const Matches = () => {
     console.log("Finding matches...");
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE}/api/profile/matches`, {
+      const res = await axios.get(`${getApiBase()}/api/profile/matches`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       console.log("Matches response:", res.data);
@@ -52,31 +51,79 @@ const Matches = () => {
     finally { setLoading(false); }
   };
 
-  const connect = () => {
-    if (stompClient?.connected) return;
-    const socket = new SockJS(SOCKJS_URL);
-    stompClient = Stomp.over(socket);
-    stompClient.debug = null;
-    stompClient.connect({}, () => {
-      if (myId) {
-        stompClient.subscribe("/topic/messages/" + myId, (msg) => {
-          const newMsg = JSON.parse(msg.body);
-          setChatHistory((prev) => [...prev, newMsg]);
-        });
-      }
-    });
-  };
-
   useEffect(() => {
     findMatches();
-    connect();
-    return () => { if (stompClient?.connected) stompClient.disconnect(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only
   }, []);
+
+  useEffect(() => {
+    if (!myId) return;
+    let cancelled = false;
+    const timers = [];
+    let attempts = 0;
+    const maxAttempts = 4;
+
+    const connectOnce = () => {
+      if (cancelled || attempts >= maxAttempts) return;
+      attempts += 1;
+      try {
+        if (stompRef.current?.connected) return;
+        const url = getSockJsUrl();
+        const socket = new SockJS(url);
+        const client = Stomp.over(socket);
+        client.debug = null;
+        stompRef.current = client;
+        client.connect(
+          {},
+          () => {
+            if (cancelled || !myId) return;
+            client.subscribe("/topic/messages/" + myId, (msg) => {
+              try {
+                const newMsg = JSON.parse(msg.body);
+                setChatHistory((prev) => [...prev, newMsg]);
+              } catch (_) {
+                /* ignore */
+              }
+            });
+          },
+          () => {
+            stompRef.current = null;
+            if (!cancelled && attempts < maxAttempts) {
+              const t = window.setTimeout(connectOnce, 700 * attempts);
+              timers.push(t);
+            }
+          }
+        );
+      } catch {
+        stompRef.current = null;
+        if (!cancelled && attempts < maxAttempts) {
+          const t = window.setTimeout(connectOnce, 700 * attempts);
+          timers.push(t);
+        }
+      }
+    };
+
+    const t0 = window.setTimeout(() => {
+      requestAnimationFrame(() => requestAnimationFrame(connectOnce));
+    }, 0);
+    timers.push(t0);
+
+    return () => {
+      cancelled = true;
+      timers.forEach(clearTimeout);
+      try {
+        stompRef.current?.disconnect?.();
+      } catch (_) {
+        /* ignore */
+      }
+      stompRef.current = null;
+    };
+  }, [myId]);
 
   const openChat = async (user) => {
     setSelectedUser(user);
     try {
-      const res = await axios.get(`${API_BASE}/api/chat/history/${user.userId}`, {
+      const res = await axios.get(`${getApiBase()}/api/chat/history/${user.userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setChatHistory(res.data);
@@ -86,9 +133,10 @@ const Matches = () => {
   };
 
   const handleSend = () => {
-    if (!message.trim() || !stompClient || !myId) return;
+    const client = stompRef.current;
+    if (!message.trim() || !client?.connected || !myId || !selectedUser) return;
     const msgObj = { senderId: myId, receiverId: selectedUser.userId, content: message };
-    stompClient.send("/app/chat.send", {}, JSON.stringify(msgObj));
+    client.send("/app/chat.send", {}, JSON.stringify(msgObj));
     setMessage("");
   };
 
@@ -96,7 +144,7 @@ const Matches = () => {
 
 const fetchPosts = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/api/posts/all`, {
+      const res = await axios.get(`${getApiBase()}/api/posts/all`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPosts(res.data);
@@ -116,7 +164,7 @@ const handlePostVibe = async () => {
 
   try {
     const token = localStorage.getItem("token");
-    await axios.post(`${API_BASE}/api/posts/create`, postContent, {
+    await axios.post(`${getApiBase()}/api/posts/create`, postContent, {
       headers: { 
         "Authorization": `Bearer ${token}`,
         "Content-Type": "text/plain" // Sending raw string from @RequestBody
