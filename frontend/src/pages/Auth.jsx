@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Github, Music, Loader } from "lucide-react"
-import { LOCAL_API_URL, REMOTE_API_URL, API_TIMEOUT_MS } from '../config/env.js'
+import { LOCAL_API_URL, API_BASE, API_TIMEOUT_MS } from '../config/env.js'
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -36,10 +36,12 @@ const Auth = () => {
     }
   }, [navigate]);
 
-  const fallbackRemote = REMOTE_API_URL || LOCAL_API_URL;
-  const [apiUrl, setApiUrl] = useState(LOCAL_API_URL);
+  // Production (e.g. GitHub Pages): API_BASE already points at Render — do not probe localhost.
+  const [apiUrl, setApiUrl] = useState(API_BASE);
 
   useEffect(() => {
+    if (!import.meta.env.DEV) return;
+
     const chooseApiUrl = async () => {
       const controller = new AbortController();
       const tid = window.setTimeout(() => controller.abort(), 5000);
@@ -50,11 +52,11 @@ const Auth = () => {
           return;
         }
       } catch (_) {
-        // localhost not available or probe timed out
+        // local backend not running
       } finally {
         window.clearTimeout(tid);
       }
-      setApiUrl(fallbackRemote);
+      setApiUrl(API_BASE);
     };
 
     chooseApiUrl();

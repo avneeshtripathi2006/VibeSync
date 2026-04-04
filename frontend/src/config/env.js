@@ -1,10 +1,15 @@
 /**
- * All deployment-specific values come from Vite env (see frontend/.env.example).
- * Local dev: copy .env.example to .env.development
- * GitHub Actions: set secrets (workflow also supplies defaults for this repo).
+ * API / WS resolution:
+ * 1) VITE_* baked in at build (CI or .env.development)
+ * 2) Runtime: *.github.io production → public Render backend (survives stale builds / cache)
+ * 3) Local dev fallback → localhost:8080
  */
 
 const trim = (s) => (typeof s === "string" ? s.trim() : "");
+
+/** Override via Vite if you change host: `VITE_PUBLIC_API_FALLBACK=https://...` */
+const GITHUB_PAGES_API_FALLBACK =
+  trim(import.meta.env.VITE_PUBLIC_API_FALLBACK) || "https://vibesync-zc9a.onrender.com";
 
 export const LOCAL_API_URL = trim(import.meta.env.VITE_LOCAL_API_URL) || "http://localhost:8080";
 
@@ -13,8 +18,23 @@ export const REMOTE_API_URL = trim(import.meta.env.VITE_API_URL);
 export const API_TIMEOUT_MS = parseInt(import.meta.env.VITE_API_TIMEOUT || "45000", 10);
 
 const viteApi = trim(import.meta.env.VITE_API_URL);
-/** Production GitHub Actions builds should set VITE_API_URL (or use workflow defaults). */
-export const API_BASE = viteApi || LOCAL_API_URL;
+
+function isGithubPagesHost() {
+  if (typeof window === "undefined") return false;
+  const h = window.location.hostname;
+  return h === "github.io" || h.endsWith(".github.io");
+}
+
+/** When the SPA is served from GitHub Pages, never use localhost as the API. */
+function runtimePublicApiBase() {
+  if (import.meta.env.DEV) return "";
+  if (!isGithubPagesHost()) return "";
+  return GITHUB_PAGES_API_FALLBACK;
+}
+
+const resolvedApiBase = viteApi || runtimePublicApiBase() || LOCAL_API_URL;
+
+export const API_BASE = resolvedApiBase;
 
 const normalizeWsUrl = (url) => {
   if (!url || !url.trim()) return null;
@@ -35,12 +55,10 @@ const apiBaseToSockJsOrigin = (apiBase) => {
   return `${o}/ws-vibe`;
 };
 
-let wsResolved =
-  normalizeWsUrl(import.meta.env.VITE_WS_URL) || normalizeWsUrl(apiBaseToSockJsOrigin(API_BASE));
+const viteWs = trim(import.meta.env.VITE_WS_URL);
+const wsFromViteOrApi =
+  normalizeWsUrl(viteWs) || normalizeWsUrl(apiBaseToSockJsOrigin(resolvedApiBase));
 
-/**
- * Pages served over https:// cannot open ws:// (mixed content). Upgrade to wss://.
- */
 const coerceWssOnHttpsPage = (url) => {
   if (!url || typeof window === "undefined") return url;
   try {
@@ -53,4 +71,4 @@ const coerceWssOnHttpsPage = (url) => {
   return url;
 };
 
-export const WS_BASE = coerceWssOnHttpsPage(wsResolved);
+export const WS_BASE = coerceWssOnHttpsPage(wsFromViteOrApi);
