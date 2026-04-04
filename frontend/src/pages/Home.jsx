@@ -4,7 +4,7 @@ import SockJS from "sockjs-client";
 import Stomp from "stompjs";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Sparkles, MessageCircle, X } from "lucide-react";
-import { API_BASE, WS_BASE } from "../config/env.js";
+import { API_BASE, SOCKJS_URL } from "../config/env.js";
 
 let stompClient = null;
 
@@ -54,7 +54,7 @@ const Matches = () => {
 
   const connect = () => {
     if (stompClient?.connected) return;
-    const socket = new SockJS(WS_BASE);
+    const socket = new SockJS(SOCKJS_URL);
     stompClient = Stomp.over(socket);
     stompClient.debug = null;
     stompClient.connect({}, () => {
