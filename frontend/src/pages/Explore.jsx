@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
 import { Heart, MessageCircle } from "lucide-react";
-
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080";
+import { API_BASE } from "../config/env.js";
 
 const Explore = () => {
   const [posts, setPosts] = useState([]);

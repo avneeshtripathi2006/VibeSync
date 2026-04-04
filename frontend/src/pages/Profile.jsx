@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { Settings, Edit2, Grid, Bookmark, Tag, ChevronUp, ChevronDown } from "lucide-react";
-
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080";
+import { API_BASE } from "../config/env.js";
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -46,10 +45,6 @@ const Profile = () => {
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
-        // #region agent log
-        fetch('http://127.0.0.1:7486/ingest/acfb494f-e1a9-47f6-8548-4a7650be671c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'134bb9'},body:JSON.stringify({sessionId:'134bb9',location:'frontend/src/pages/Profile.jsx:fetchProfileData:profileRequest',message:'profile request',data:{endpoint:'/api/profile/my',tokenPresent:!!token},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
-
         // Fetch User Info
         const profileRes = await axios.get(`${API_BASE}/api/profile/my`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -59,29 +54,13 @@ const Profile = () => {
         setVibeTags(profileRes.data.vibeTags || "");
         setProfilePicUrl(profileRes.data.profilePicUrl || "");
 
-        // #region agent log
-        fetch('http://127.0.0.1:7486/ingest/acfb494f-e1a9-47f6-8548-4a7650be671c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'134bb9'},body:JSON.stringify({sessionId:'134bb9',location:'frontend/src/pages/Profile.jsx:fetchProfileData:profileResponseShape',message:'profile response shape',data:{hasProfileId:profileRes.data?.id!=null,hasFullName:profileRes.data?.fullName!=null,hasBio:profileRes.data?.bio!=null,hasVibeTags:profileRes.data?.vibeTags!=null,hasUserField:profileRes.data?.user!=null},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
-
         // Fetch only THIS user's posts
-        // #region agent log
-        fetch('http://127.0.0.1:7486/ingest/acfb494f-e1a9-47f6-8548-4a7650be671c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'134bb9'},body:JSON.stringify({sessionId:'134bb9',location:'frontend/src/pages/Profile.jsx:fetchProfileData:postsRequest',message:'posts request',data:{endpoint:'/api/posts/my-posts',tokenPresent:!!token},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
-
         const postsRes = await axios.get(`${API_BASE}/api/posts/my-posts`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUserPosts(postsRes.data);
-
-        // #region agent log
-        fetch('http://127.0.0.1:7486/ingest/acfb494f-e1a9-47f6-8548-4a7650be671c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'134bb9'},body:JSON.stringify({sessionId:'134bb9',location:'frontend/src/pages/Profile.jsx:fetchProfileData:postsResponseShape',message:'posts response shape',data:{postsCount:Array.isArray(postsRes.data)?postsRes.data.length:null,hasUserOnFirstItem:!!postsRes.data?.[0]?.user},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
       } catch (err) {
         console.error("Profile fetch failed", err);
-
-        // #region agent log
-        fetch('http://127.0.0.1:7486/ingest/acfb494f-e1a9-47f6-8548-4a7650be671c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'134bb9'},body:JSON.stringify({sessionId:'134bb9',location:'frontend/src/pages/Profile.jsx:fetchProfileData:error',message:'profile/posts request failed',data:{status:err?.response?.status||null,hasResponseData:!!err?.response?.data,axiosErrorMessage:!!err?.message},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
       }
     };
     fetchProfileData();

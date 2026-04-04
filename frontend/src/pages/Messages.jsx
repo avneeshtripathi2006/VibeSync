@@ -4,23 +4,7 @@ import SockJS from "sockjs-client";
 import Stomp from "stompjs";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, X } from "lucide-react";
-
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080";
-
-const normalizeWsUrl = (url) => {
-  if (!url || !url.trim()) return null;
-  let trimmed = url.trim();
-  if (/^https?:\/\//i.test(trimmed)) {
-    return trimmed.replace(/^http:\/\//i, "ws://").replace(/^https:\/\//i, "wss://");
-  }
-  if (/^wss?:\/\//i.test(trimmed)) {
-    return trimmed;
-  }
-  return `wss://${trimmed}`;
-};
-
-const defaultWs = `${API_BASE.replace(/^http/i, "ws")}/ws-vibe`;
-const WS_BASE = normalizeWsUrl(import.meta.env.VITE_WS_URL) || normalizeWsUrl(defaultWs);
+import { API_BASE, WS_BASE } from "../config/env.js";
 
 let stompClient = null;
 

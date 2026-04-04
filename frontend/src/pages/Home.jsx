@@ -4,24 +4,8 @@ import SockJS from "sockjs-client";
 import Stomp from "stompjs";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Sparkles, MessageCircle, X } from "lucide-react";
+import { API_BASE, WS_BASE } from "../config/env.js";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080";
-
-const normalizeWsUrl = (url) => {
-  if (!url || !url.trim()) return null;
-  let trimmed = url.trim();
-  if (/^https?:\/\//i.test(trimmed)) {
-    return trimmed.replace(/^http:\/\//i, "ws://").replace(/^https:\/\//i, "wss://");
-  }
-  if (/^wss?:\/\//i.test(trimmed)) {
-    return trimmed;
-  }
-  // fallback to host-path style: 0.0.0.0:8080/ws-vibe
-  return `wss://${trimmed}`;
-};
-
-const defaultWs = `${API_BASE.replace(/^http/i, "ws")}/ws-vibe`;
-const WS_BASE = normalizeWsUrl(import.meta.env.VITE_WS_URL) || normalizeWsUrl(defaultWs);
 let stompClient = null;
 
 const Matches = () => {
@@ -64,9 +48,6 @@ const Matches = () => {
       setMatches(res.data);
     } catch (err) {
       console.error("Match fetch failed", err);
-      // #region agent log
-      fetch('http://127.0.0.1:7486/ingest/acfb494f-e1a9-47f6-8548-4a7650be671c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'134bb9'},body:JSON.stringify({sessionId:'134bb9',location:'frontend/src/pages/Home.jsx:findMatches:error',message:'matches request failed',data:{status:err?.response?.status||null,hasResponseData:!!err?.response?.data},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
     }
     finally { setLoading(false); }
   };
@@ -80,9 +61,6 @@ const Matches = () => {
       if (myId) {
         stompClient.subscribe("/topic/messages/" + myId, (msg) => {
           const newMsg = JSON.parse(msg.body);
-          // #region agent log
-          fetch('http://127.0.0.1:7486/ingest/acfb494f-e1a9-47f6-8548-4a7650be671c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'134bb9'},body:JSON.stringify({sessionId:'134bb9',location:'frontend/src/pages/Home.jsx:websocket:onMessage',message:'websocket message received',data:{hasContent:typeof newMsg?.content === 'string',contentLength:typeof newMsg?.content === 'string' ? newMsg.content.length : null},timestamp:Date.now()})}).catch(()=>{});
-          // #endregion
           setChatHistory((prev) => [...prev, newMsg]);
         });
       }
@@ -104,9 +82,6 @@ const Matches = () => {
       setChatHistory(res.data);
     } catch (err) {
       console.error("Failed to load chat", err);
-      // #region agent log
-      fetch('http://127.0.0.1:7486/ingest/acfb494f-e1a9-47f6-8548-4a7650be671c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'134bb9'},body:JSON.stringify({sessionId:'134bb9',location:'frontend/src/pages/Home.jsx:openChat:error',message:'chat history request failed',data:{status:err?.response?.status||null,hasResponseData:!!err?.response?.data},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
     }
   };
 
@@ -121,22 +96,12 @@ const Matches = () => {
 
 const fetchPosts = async () => {
     try {
-      // #region agent log
-      fetch('http://127.0.0.1:7486/ingest/acfb494f-e1a9-47f6-8548-4a7650be671c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'134bb9'},body:JSON.stringify({sessionId:'134bb9',runId:'verify',location:'frontend/src/pages/Home.jsx:fetchPosts:start',message:'starting posts request',data:{tokenPresent:!!token},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
-
       const res = await axios.get(`${API_BASE}/api/posts/all`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPosts(res.data);
-      // #region agent log
-      fetch('http://127.0.0.1:7486/ingest/acfb494f-e1a9-47f6-8548-4a7650be671c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'134bb9'},body:JSON.stringify({sessionId:'134bb9',runId:'verify',location:'frontend/src/pages/Home.jsx:fetchPosts:success',message:'posts request succeeded',data:{status:res?.status||null,postsCount:Array.isArray(res?.data)?res.data.length:null},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
     } catch (err) {
       console.error("Posts fetch failed", err);
-      // #region agent log
-      fetch('http://127.0.0.1:7486/ingest/acfb494f-e1a9-47f6-8548-4a7650be671c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'134bb9'},body:JSON.stringify({sessionId:'134bb9',location:'frontend/src/pages/Home.jsx:fetchPosts:error',message:'posts request failed',data:{status:err?.response?.status||null,hasResponseData:!!err?.response?.data},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
     }
 };
 

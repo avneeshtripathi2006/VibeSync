@@ -10,15 +10,18 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import java.io.FileWriter;
+import org.springframework.core.env.Environment;
+
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    @Autowired
+    private Environment environment;
 
     @Autowired
     private OAuth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler;
@@ -45,22 +48,8 @@ public class SecurityConfig {
                         .successHandler(oauth2AuthenticationSuccessHandler)
                 )
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            // #region agent log
-                            try (FileWriter fw = new FileWriter("C:/Users/lenovo/OneDrive/Desktop/VibeSync_Project/.cursor/debug-134bb9.log", true)) {
-                                fw.write("{\"sessionId\":\"134bb9\",\"runId\":\"security-check\",\"hypothesisId\":\"H_SEC_DENY_REASON\",\"id\":\""+UUID.randomUUID()+"\",\"location\":\"SecurityConfig.authenticationEntryPoint\",\"message\":\"security unauthenticated\",\"data\":{\"path\":\""+request.getRequestURI()+"\",\"method\":\""+request.getMethod()+"\"},\"timestamp\":"+System.currentTimeMillis()+"}\n");
-                            } catch (Exception ignored) {}
-                            // #endregion
-                            response.sendError(401);
-                        })
-                        .accessDeniedHandler((request, response, accessDeniedException) -> {
-                            // #region agent log
-                            try (FileWriter fw = new FileWriter("C:/Users/lenovo/OneDrive/Desktop/VibeSync_Project/.cursor/debug-134bb9.log", true)) {
-                                fw.write("{\"sessionId\":\"134bb9\",\"runId\":\"security-check\",\"hypothesisId\":\"H_SEC_DENY_REASON\",\"id\":\""+UUID.randomUUID()+"\",\"location\":\"SecurityConfig.accessDeniedHandler\",\"message\":\"security access denied\",\"data\":{\"path\":\""+request.getRequestURI()+"\",\"method\":\""+request.getMethod()+"\"},\"timestamp\":"+System.currentTimeMillis()+"}\n");
-                            } catch (Exception ignored) {}
-                            // #endregion
-                            response.sendError(403);
-                        }))
+                        .authenticationEntryPoint((request, response, authException) -> response.sendError(401))
+                        .accessDeniedHandler((request, response, accessDeniedException) -> response.sendError(403)))
                 .httpBasic(basic -> basic.disable())
                 .formLogin(form -> form.disable());
 
@@ -76,28 +65,24 @@ public class SecurityConfig {
         allowedOrigins.add("http://localhost:5173"); // Local development
         
         // Add GitHub Pages URL if GITHUB_USERNAME is set
-        String githubUsername = System.getenv("GITHUB_USERNAME");
+        String githubUsername = environment.getProperty("GITHUB_USERNAME");
         if (githubUsername != null && !githubUsername.isEmpty()) {
             allowedOrigins.add("https://" + githubUsername + ".github.io");
         } else {
-            // Default pattern for GitHub Pages (user will customize)
             allowedOrigins.add("https://*.github.io");
         }
-        
-        // Add Render backend/frontend production URL if set
-        String renderBackendDomain = System.getenv("RENDER_BACKEND_DOMAIN");
+
+        String renderBackendDomain = environment.getProperty("RENDER_BACKEND_DOMAIN");
         if (renderBackendDomain != null && !renderBackendDomain.isEmpty()) {
             allowedOrigins.add("https://" + renderBackendDomain);
         }
-        
-        // Add custom frontend URL if set
-        String customFrontendUrl = System.getenv("CUSTOM_FRONTEND_URL");
+
+        String customFrontendUrl = environment.getProperty("CUSTOM_FRONTEND_URL");
         if (customFrontendUrl != null && !customFrontendUrl.isEmpty()) {
             allowedOrigins.add(customFrontendUrl);
         }
-        
-        // Add explicit frontend URL if set (preferred for production)
-        String frontendUrl = System.getenv("FRONTEND_URL");
+
+        String frontendUrl = environment.getProperty("FRONTEND_URL");
         if (frontendUrl != null && !frontendUrl.isEmpty()) {
             allowedOrigins.add(frontendUrl);
         }

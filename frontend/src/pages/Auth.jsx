@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Github, Music, Loader } from "lucide-react"
+import { LOCAL_API_URL, REMOTE_API_URL, API_TIMEOUT_MS } from '../config/env.js'
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -35,24 +36,25 @@ const Auth = () => {
     }
   }, [navigate]);
 
-  const LOCAL_API_URL = "http://localhost:8080";
-  const REMOTE_API_URL = import.meta.env.VITE_API_URL || "https://vibesync-zc9a.onrender.com";
-  const API_TIMEOUT = parseInt(import.meta.env.VITE_API_TIMEOUT || "45000"); // 45 second timeout for Render cold start
-
+  const fallbackRemote = REMOTE_API_URL || LOCAL_API_URL;
   const [apiUrl, setApiUrl] = useState(LOCAL_API_URL);
 
   useEffect(() => {
     const chooseApiUrl = async () => {
+      const controller = new AbortController();
+      const tid = window.setTimeout(() => controller.abort(), 5000);
       try {
-        const res = await fetch(`${LOCAL_API_URL}/auth/test`, { method: 'GET', mode: 'cors', timeout: 5000 });
+        const res = await fetch(`${LOCAL_API_URL}/auth/test`, { method: 'GET', mode: 'cors', signal: controller.signal });
         if (res.ok) {
           setApiUrl(LOCAL_API_URL);
           return;
         }
       } catch (_) {
-        // localhost not available
+        // localhost not available or probe timed out
+      } finally {
+        window.clearTimeout(tid);
       }
-      setApiUrl(REMOTE_API_URL);
+      setApiUrl(fallbackRemote);
     };
 
     chooseApiUrl();
@@ -66,7 +68,7 @@ const Auth = () => {
     const url = isLogin ? `${apiUrl}/auth/login` : `${apiUrl}/auth/signup`;
     try {
       const response = await axios.post(url, formData, {
-        timeout: API_TIMEOUT
+        timeout: API_TIMEOUT_MS
       });
       const data = response.data;
 

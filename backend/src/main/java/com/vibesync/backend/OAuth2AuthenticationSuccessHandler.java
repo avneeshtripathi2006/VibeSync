@@ -1,6 +1,7 @@
 package com.vibesync.backend;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -20,6 +21,9 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Value("${FRONTEND_URL:http://localhost:5173}")
+    private String frontendUrl;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -66,26 +70,28 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             // Generate JWT token
             String token = jwtUtil.generateToken(user);
 
-            // Get frontend URL from environment or use default
-            String frontendUrl = System.getenv("FRONTEND_URL") != null ? 
-                                 System.getenv("FRONTEND_URL") : 
-                                 "http://localhost:5173";
-
-            // Redirect to frontend with token
-            String redirectUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/auth/oauth2/success")
+            String feBase = trimTrailingSlash(frontendUrl);
+            // SPA uses HashRouter: route must be in the hash (see frontend/src/App.jsx)
+            String query = UriComponentsBuilder.newInstance()
                     .queryParam("token", token)
                     .queryParam("provider", provider)
-                    .build().toUriString();
+                    .build()
+                    .encode()
+                    .getQuery();
+            String redirectUrl = feBase + "/#/auth/oauth2/success" + (query != null ? "?" + query : "");
 
             getRedirectStrategy().sendRedirect(request, response, redirectUrl);
         } else {
-            // Get frontend URL from environment or use default
-            String frontendUrl = System.getenv("FRONTEND_URL") != null ? 
-                                 System.getenv("FRONTEND_URL") : 
-                                 "http://localhost:5173";
-            // Redirect to error page
-            getRedirectStrategy().sendRedirect(request, response, frontendUrl + "/?error=oauth_failed");
+            String feBase = trimTrailingSlash(frontendUrl);
+            getRedirectStrategy().sendRedirect(request, response, feBase + "/#/?error=oauth_failed");
         }
+    }
+
+    private static String trimTrailingSlash(String url) {
+        if (url == null || url.isEmpty()) {
+            return "http://localhost:5173";
+        }
+        return url.endsWith("/") ? url.substring(0, url.length() - 1) : url;
     }
 
     private String getProviderFromRequest(HttpServletRequest request) {

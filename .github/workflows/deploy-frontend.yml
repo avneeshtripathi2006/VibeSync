@@ -34,7 +34,9 @@ jobs:
       - name: Build with production config
         run: cd frontend && npm run build
         env:
-          VITE_API_URL: https://vibesync-zc9a.onrender.com
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_WS_URL: ${{ secrets.VITE_WS_URL }}
+          VITE_BASE_PATH: ${{ secrets.VITE_BASE_PATH }}
           VITE_API_TIMEOUT: 45000
 
       - name: Setup Pages
