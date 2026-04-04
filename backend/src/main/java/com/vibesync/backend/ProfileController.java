@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,45 +25,32 @@ public class ProfileController {
     private AiService aiService; // 👈 Inject the new service
 
     @PostMapping("/update")
-    public String updateProfile(@RequestHeader("Authorization") String token, @RequestBody VibeProfile profileData) {
+    public ResponseEntity<String> updateProfile(@RequestHeader(value = "Authorization", required = false) String token,
+            @RequestBody VibeProfile profileData) {
         try {
             if (token == null || !token.startsWith("Bearer ")) {
-                return null; // or throw a custom "Unauthorized" error
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error: Not authorized.");
             }
             String jwt = token.substring(7);
             String email = jwtUtil.extractEmail(jwt);
             User user = userRepository.findByEmail(email);
 
-            // 1. Check if profile exists
-            VibeProfile profile = profileRepository.findByUserId(user.getId()).orElse(new VibeProfile());
-
-            // 2. Update basic info
-            profile.setBio(profileData.getBio());
-            profile.setVibeTags(profileData.getVibeTags());
-            profile.setProfilePicUrl(profileData.getProfilePicUrl());
-            profile.setUser(user);
-
-            // 3. Generate NEW AI Vector
             String vectorString = aiService.getEmbedding(profileData.getBio());
 
-            // 4. Upsert bio + tags + vector
             profileRepository.saveWithVector(
                     profileData.getBio(),
                     profileData.getVibeTags(),
                     user.getId(),
-                    vectorString);
+                    vectorString,
+                    profileData.getProfilePicUrl());
 
-            // 5. Make sure profilePicUrl is persisted in DB (handled via JPA save)
-            VibeProfile savedProfile = profileRepository.findByUserId(user.getId()).orElse(profile);
-            savedProfile.setProfilePicUrl(profileData.getProfilePicUrl());
-            profileRepository.save(savedProfile);
-
-            return "Vibe Saved Successfully!";
+            return ResponseEntity.ok("Vibe Saved Successfully!");
 
         } catch (Exception e) {
-            // This is important: if it fails, we need to know WHY
             System.out.println("Save Error: " + e.getMessage());
-            return "Error: Could not update vibe. Try logging out and in.";
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error: Could not update vibe. Try logging out and in.");
         }
     }
 

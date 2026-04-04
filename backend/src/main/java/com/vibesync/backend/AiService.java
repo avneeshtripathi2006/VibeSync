@@ -1,10 +1,15 @@
 package com.vibesync.backend;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import java.util.Map;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class AiService {
@@ -18,14 +23,23 @@ public class AiService {
 
     public String getEmbedding(String text) {
         try {
-            Map<String, String> request = Map.of("text", text);
-            Map<String, Object> response = restTemplate.postForObject(aiServiceUrl + "/embed", request, Map.class);
-
+            Map<String, String> body = new HashMap<>();
+            body.put("text", text != null ? text : "");
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, String>> entity = new HttpEntity<>(body, headers);
+            Map<String, Object> response = restTemplate.postForObject(aiServiceUrl + "/embed", entity, Map.class);
+            if (response == null) {
+                return null;
+            }
+            @SuppressWarnings("unchecked")
             List<Double> list = (List<Double>) response.get("embedding");
-            // This converts the list [1, 2] into the string "[1, 2]"
+            if (list == null || list.isEmpty()) {
+                return null;
+            }
             return list.toString();
         } catch (Exception e) {
-            System.err.println("AI Embedding Failed: " + e.getMessage()); // 👈 Senior's log
+            System.err.println("AI Embedding Failed: " + e.getMessage());
             return null;
         }
     }

@@ -9,23 +9,28 @@ import org.springframework.stereotype.Repository;
 import jakarta.transaction.Transactional;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Repository
 public interface ProfileRepository extends JpaRepository<VibeProfile, Long> {
     Optional<VibeProfile> findByUserId(Long userId);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Transactional
-    @Query(value = "INSERT INTO vibe_profiles (bio, vibe_tags, user_id, bio_vector) " +
-            "VALUES (:bio, :tags, :userId, CAST(:vector AS vector)) " +
+    @Query(value = "INSERT INTO vibe_profiles (bio, vibe_tags, user_id, bio_vector, profile_pic_url) " +
+            "VALUES (:bio, :tags, :userId, " +
+            "CASE WHEN :vector IS NULL OR TRIM(COALESCE(:vector, '')) = '' THEN NULL ELSE CAST(:vector AS vector) END, " +
+            ":profilePicUrl) " +
             "ON CONFLICT (user_id) DO UPDATE SET " +
-            "bio = EXCLUDED.bio, vibe_tags = EXCLUDED.vibe_tags, bio_vector = EXCLUDED.bio_vector", nativeQuery = true)
+            "bio = EXCLUDED.bio, " +
+            "vibe_tags = EXCLUDED.vibe_tags, " +
+            "bio_vector = COALESCE(EXCLUDED.bio_vector, vibe_profiles.bio_vector), " +
+            "profile_pic_url = EXCLUDED.profile_pic_url", nativeQuery = true)
     void saveWithVector(@Param("bio") String bio,
             @Param("tags") String tags,
             @Param("userId") Long userId,
-            @Param("vector") String vector);
+            @Param("vector") String vector,
+            @Param("profilePicUrl") String profilePicUrl);
 
     @Query(value = "SELECT u.id as userId, u.full_name as fullName, vp.bio as bio, vp.vibe_tags as vibeTags, " + // 👈 Added u.id
                "(vp.bio_vector <=> (SELECT bio_vector FROM vibe_profiles WHERE user_id = :userId)) as distance " +
