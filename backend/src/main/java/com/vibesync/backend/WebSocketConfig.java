@@ -30,33 +30,37 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // SockJS sends Origin; if it is not allowed here, the browser shows 403 on …/ws-vibe/info
         String allowedOriginsEnv = environment.getProperty("WEBSOCKET_ORIGINS");
-        var endpoint = registry.addEndpoint("/ws-vibe");
+        List<String> patterns = new ArrayList<>();
+
         if (allowedOriginsEnv != null && !allowedOriginsEnv.isBlank()) {
-            String[] origins = allowedOriginsEnv.split(",");
-            for (int i = 0; i < origins.length; i++) {
-                origins[i] = origins[i].trim();
+            for (String origin : allowedOriginsEnv.split(",")) {
+                origin = origin.trim();
+                if (!origin.isEmpty()) {
+                    patterns.add(origin);
+                }
             }
-            endpoint.setAllowedOrigins(origins);
-        } else {
-            List<String> patterns = new ArrayList<>();
-            patterns.add("http://localhost:*");
-            patterns.add("http://127.0.0.1:*");
-            patterns.add("https://*.github.io");
-            patterns.add("https://*.onrender.com");
-            String githubUsername = environment.getProperty("GITHUB_USERNAME");
-            if (githubUsername != null && !githubUsername.isBlank()) {
-                patterns.add("https://" + githubUsername.trim() + ".github.io");
-            }
-            String fe = environment.getProperty("FRONTEND_URL");
-            if (fe != null && !fe.isBlank()) {
-                patterns.add(fe.trim());
-            }
-            String custom = environment.getProperty("CUSTOM_FRONTEND_URL");
-            if (custom != null && !custom.isBlank()) {
-                patterns.add(custom.trim());
-            }
-            endpoint.setAllowedOriginPatterns(patterns.toArray(new String[0]));
         }
-        endpoint.withSockJS();
+
+        patterns.add("http://localhost:*");
+        patterns.add("http://127.0.0.1:*");
+        patterns.add("https://*.github.io");
+        patterns.add("https://*.onrender.com");
+
+        String githubUsername = environment.getProperty("GITHUB_USERNAME");
+        if (githubUsername != null && !githubUsername.isBlank()) {
+            patterns.add("https://" + githubUsername.trim() + ".github.io");
+        }
+        String fe = environment.getProperty("FRONTEND_URL");
+        if (fe != null && !fe.isBlank()) {
+            patterns.add(fe.trim());
+        }
+        String custom = environment.getProperty("CUSTOM_FRONTEND_URL");
+        if (custom != null && !custom.isBlank()) {
+            patterns.add(custom.trim());
+        }
+
+        registry.addEndpoint("/ws-vibe")
+                .setAllowedOriginPatterns(patterns.toArray(new String[0]))
+                .withSockJS();
     }
 }

@@ -103,7 +103,7 @@ public class ProfileController {
 
         try {
             if (token == null || !token.startsWith("Bearer ")) {
-                return null; // or throw a custom "Unauthorized" error
+                return List.of();
             }
             String jwt = token.substring(7);
             String email = jwtUtil.extractEmail(jwt);
@@ -114,7 +114,8 @@ public class ProfileController {
 
             return profileRepository.findTopMatches(user.getId());
         } catch (Exception e) {
-            return null;
+            e.printStackTrace();
+            return List.of();
         }
     }
 }
