@@ -1,8 +1,11 @@
 package com.vibesync.backend;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -10,8 +13,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.CorsFilter;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.core.env.Environment;
 
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -39,14 +42,29 @@ public class SecurityConfig {
      */
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers("/api/posts/**", "/api/chat/**", "/ws-vibe/**");
+        return (web) -> web.ignoring().requestMatchers(
+                "/api/posts/**",
+                "/api/chat/**",
+                "/api/profile/**",
+                "/ws-vibe/**");
+    }
+
+    /**
+     * Ignored paths skip the Spring Security filter chain (including its CORS filter). SockJS uses XHR to
+     * /ws-vibe/info — without this, GitHub Pages sees missing Access-Control-Allow-Origin and 403-style failures.
+     */
+    @Bean
+    public FilterRegistrationBean<CorsFilter> globalCorsFilter(CorsConfigurationSource corsConfigurationSource) {
+        FilterRegistrationBean<CorsFilter> reg = new FilterRegistrationBean<>(new CorsFilter(corsConfigurationSource));
+        reg.setOrder(Ordered.HIGHEST_PRECEDENCE);
+        reg.addUrlPatterns("/*");
+        return reg;
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**", "/oauth2/**", "/login/oauth2/**", "/test").permitAll()
                         .requestMatchers("/api/profile/**").permitAll()
@@ -73,7 +91,9 @@ public class SecurityConfig {
         
         // Build allowed origins from environment variables or defaults
         List<String> allowedOrigins = new ArrayList<>();
-        allowedOrigins.add("http://localhost:5173"); // Local development
+        allowedOrigins.add("http://localhost:*");
+        allowedOrigins.add("http://127.0.0.1:*");
+        allowedOrigins.add("http://localhost:5173");
         
         // Add GitHub Pages URL if GITHUB_USERNAME is set
         String githubUsername = environment.getProperty("GITHUB_USERNAME");

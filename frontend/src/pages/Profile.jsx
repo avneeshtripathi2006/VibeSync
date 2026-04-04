@@ -46,6 +46,10 @@ const Profile = () => {
 
   useEffect(() => {
     const fetchProfileData = async () => {
+      if (!token) {
+        setUser({ fullName: "You" });
+        return;
+      }
       try {
         // Fetch User Info
         const profileRes = await axios.get(`${getApiBase()}/api/profile/my`, {
@@ -71,7 +75,7 @@ const Profile = () => {
       }
     };
     fetchProfileData();
-  }, [showToast]);
+  }, [showToast, token]);
 
   if (!user) return <div className="p-20 text-center text-slate-500">Syncing frequency...</div>;
 

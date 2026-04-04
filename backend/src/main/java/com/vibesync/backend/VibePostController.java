@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/posts")
-@CrossOrigin("*")
 public class VibePostController {
     
     @Autowired private VibePostRepository postRepository;

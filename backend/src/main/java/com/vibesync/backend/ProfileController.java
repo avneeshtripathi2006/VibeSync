@@ -34,6 +34,9 @@ public class ProfileController {
             String jwt = token.substring(7);
             String email = jwtUtil.extractEmail(jwt);
             User user = userRepository.findByEmail(email);
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error: User not found.");
+            }
 
             String vectorString = aiService.getEmbedding(profileData.getBio());
 
@@ -54,9 +57,8 @@ public class ProfileController {
         }
     }
 
-    @CrossOrigin(origins = "http://localhost:5173") // 👈 Add this here too
     @GetMapping("/my")
-    public Map<String, Object> getMyProfile(@RequestHeader("Authorization") String token) {
+    public Map<String, Object> getMyProfile(@RequestHeader(value = "Authorization", required = false) String token) {
         try {
             if (token == null || !token.startsWith("Bearer ")) {
                 System.out.println("Blocked: No valid token header found.");
@@ -65,6 +67,9 @@ public class ProfileController {
             String jwt = token.substring(7);
             String email = jwtUtil.extractEmail(jwt);
             User user = userRepository.findByEmail(email);
+            if (user == null) {
+                return null;
+            }
 
             System.out.println("Searching profile for User: " + email); // 👈 Debug 1
 
@@ -103,6 +108,9 @@ public class ProfileController {
             String jwt = token.substring(7);
             String email = jwtUtil.extractEmail(jwt);
             User user = userRepository.findByEmail(email);
+            if (user == null) {
+                return List.of();
+            }
 
             return profileRepository.findTopMatches(user.getId());
         } catch (Exception e) {
