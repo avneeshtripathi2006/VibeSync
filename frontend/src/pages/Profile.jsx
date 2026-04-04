@@ -3,8 +3,10 @@ import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { Settings, Edit2, Grid, Bookmark, Tag, ChevronUp, ChevronDown } from "lucide-react";
 import { getApiBase } from "../config/env.js";
+import { useToast } from "../context/ToastContext.jsx";
 
 const Profile = () => {
+  const showToast = useToast();
   const [user, setUser] = useState(null);
   const [userPosts, setUserPosts] = useState([]);
   const [bio, setBio] = useState("");
@@ -36,7 +38,7 @@ const Profile = () => {
       setProfilePicUrl(profileRes.data.profilePicUrl || "");
     } catch (err) {
       console.error("Failed to update profile", err);
-      alert("Could not save profile. Try again.");
+      showToast("Could not save profile. Try signing in again.");
     } finally {
       setSaving(false);
     }
@@ -49,22 +51,27 @@ const Profile = () => {
         const profileRes = await axios.get(`${getApiBase()}/api/profile/my`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setUser(profileRes.data);
-        setBio(profileRes.data.bio || "");
-        setVibeTags(profileRes.data.vibeTags || "");
-        setProfilePicUrl(profileRes.data.profilePicUrl || "");
+        const d = profileRes.data && typeof profileRes.data === "object" ? profileRes.data : {};
+        setUser({
+          ...d,
+          fullName: d.fullName ?? "You",
+        });
+        setBio(d.bio || "");
+        setVibeTags(d.vibeTags || "");
+        setProfilePicUrl(d.profilePicUrl || "");
 
-        // Fetch only THIS user's posts
         const postsRes = await axios.get(`${getApiBase()}/api/posts/my-posts`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setUserPosts(postsRes.data);
+        setUserPosts(Array.isArray(postsRes.data) ? postsRes.data : []);
       } catch (err) {
         console.error("Profile fetch failed", err);
+        showToast("Could not load your profile.");
+        setUser({ fullName: "You" });
       }
     };
     fetchProfileData();
-  }, []);
+  }, [showToast]);
 
   if (!user) return <div className="p-20 text-center text-slate-500">Syncing frequency...</div>;
 

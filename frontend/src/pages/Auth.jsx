@@ -3,9 +3,11 @@ import axios from 'axios'
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Github, Music, Loader } from "lucide-react"
 import { LOCAL_API_URL, getApiBase, API_TIMEOUT_MS } from '../config/env.js'
+import { useToast } from '../context/ToastContext.jsx'
 
 const Auth = () => {
   const navigate = useNavigate();
+  const showToast = useToast();
   const [searchParams] = useSearchParams();
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({ fullName: '', email: '', password: '' });
@@ -19,14 +21,13 @@ const Auth = () => {
     const error = searchParams.get('error');
 
     if (token) {
-      // OAuth login successful
       localStorage.setItem("token", token);
+      window.dispatchEvent(new Event("vibesync-token"));
       navigate("/home");
     } else if (error) {
-      // OAuth login failed
-      alert("OAuth authentication failed. Please try again.");
+      showToast("OAuth sign-in failed. Please try again.");
     }
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate, showToast]);
 
   // Redirect to /home if already logged in
   useEffect(() => {
@@ -80,8 +81,9 @@ const Auth = () => {
           setErrorMessage(data);
         } else {
           // 💾 This is the key part!
-          localStorage.setItem("token", data); 
-          navigate("/home"); // 🚀 Redirect to home page
+          localStorage.setItem("token", data);
+          window.dispatchEvent(new Event("vibesync-token"));
+          navigate("/home");
         }
       } else {
         setErrorMessage(typeof data === 'string' ? data : "User registered successfully!"); // Shows signup response

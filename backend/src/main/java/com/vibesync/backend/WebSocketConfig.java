@@ -8,6 +8,9 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
@@ -25,25 +28,35 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // 3. The URL where React will connect
-        // Get allowed origins from environment or use default
+        // SockJS sends Origin; if it is not allowed here, the browser shows 403 on …/ws-vibe/info
         String allowedOriginsEnv = environment.getProperty("WEBSOCKET_ORIGINS");
-        String[] allowedOrigins;
-        
-        if (allowedOriginsEnv != null && !allowedOriginsEnv.isEmpty()) {
-            // Support multiple origins separated by comma
-            allowedOrigins = allowedOriginsEnv.split(",");
-            // Trim whitespace from each origin
-            for (int i = 0; i < allowedOrigins.length; i++) {
-                allowedOrigins[i] = allowedOrigins[i].trim();
+        var endpoint = registry.addEndpoint("/ws-vibe");
+        if (allowedOriginsEnv != null && !allowedOriginsEnv.isBlank()) {
+            String[] origins = allowedOriginsEnv.split(",");
+            for (int i = 0; i < origins.length; i++) {
+                origins[i] = origins[i].trim();
             }
+            endpoint.setAllowedOrigins(origins);
         } else {
-            // Default to localhost for local development
-            allowedOrigins = new String[]{"http://localhost:5173"};
+            List<String> patterns = new ArrayList<>();
+            patterns.add("http://localhost:*");
+            patterns.add("http://127.0.0.1:*");
+            patterns.add("https://*.github.io");
+            patterns.add("https://*.onrender.com");
+            String githubUsername = environment.getProperty("GITHUB_USERNAME");
+            if (githubUsername != null && !githubUsername.isBlank()) {
+                patterns.add("https://" + githubUsername.trim() + ".github.io");
+            }
+            String fe = environment.getProperty("FRONTEND_URL");
+            if (fe != null && !fe.isBlank()) {
+                patterns.add(fe.trim());
+            }
+            String custom = environment.getProperty("CUSTOM_FRONTEND_URL");
+            if (custom != null && !custom.isBlank()) {
+                patterns.add(custom.trim());
+            }
+            endpoint.setAllowedOriginPatterns(patterns.toArray(new String[0]));
         }
-        
-        registry.addEndpoint("/ws-vibe")
-                .setAllowedOrigins(allowedOrigins)
-                .withSockJS();
+        endpoint.withSockJS();
     }
 }

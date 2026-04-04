@@ -3,8 +3,10 @@ import axios from "axios";
 import { motion } from "framer-motion";
 import { Heart, MessageCircle } from "lucide-react";
 import { getApiBase } from "../config/env.js";
+import { useToast } from "../context/ToastContext.jsx";
 
 const Explore = () => {
+  const showToast = useToast();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const token = localStorage.getItem("token");
@@ -18,6 +20,7 @@ const Explore = () => {
       setPosts(res.data);
     } catch (err) {
       console.error("Failed to fetch posts", err);
+      showToast("Could not load explore feed.");
     } finally {
       setLoading(false);
     }
@@ -25,6 +28,7 @@ const Explore = () => {
 
   useEffect(() => {
     fetchAllPosts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only load
   }, []);
 
   return (

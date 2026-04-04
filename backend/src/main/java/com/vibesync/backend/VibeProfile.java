@@ -28,6 +28,8 @@ public class VibeProfile {
     private String bioVector; // 👈 Change double[] to String
 
     private String vibeTags; // We'll store these as "Music,Coding,Gym"
+
+    @Column(length = 2048)
     private String profilePicUrl;
 
     public VibeProfile() {
