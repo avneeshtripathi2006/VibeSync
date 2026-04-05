@@ -37,7 +37,10 @@ public class AiService {
             if (list == null || list.isEmpty()) {
                 return null;
             }
-            return list.toString();
+            String vectorLiteral = list.stream()
+                    .map(String::valueOf)
+                    .collect(java.util.stream.Collectors.joining(","));
+            return "[" + vectorLiteral + "]";
         } catch (Exception e) {
             System.err.println("AI Embedding Failed: " + e.getMessage());
             return null;

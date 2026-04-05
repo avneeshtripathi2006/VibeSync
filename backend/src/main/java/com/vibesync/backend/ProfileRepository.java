@@ -38,7 +38,6 @@ public interface ProfileRepository extends JpaRepository<VibeProfile, Long> {
                "JOIN users u ON vp.user_id = u.id " +
                "CROSS JOIN (SELECT bio_vector FROM vibe_profiles WHERE user_id = :userId) me " +
                "WHERE vp.user_id != :userId " +
-               "AND vp.bio_vector IS NOT NULL AND me.bio_vector IS NOT NULL " +
-               "ORDER BY distance ASC LIMIT 5", nativeQuery = true)
+               "ORDER BY (vp.bio_vector IS NULL), distance ASC NULLS LAST LIMIT 5", nativeQuery = true)
 List<MatchProjection> findTopMatches(@Param("userId") Long userId);
 }
