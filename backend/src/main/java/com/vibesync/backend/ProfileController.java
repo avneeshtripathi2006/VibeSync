@@ -62,12 +62,13 @@ public class ProfileController {
                 vectorString = EmbeddingFallback.vectorLiteralFromText(bio);
             }
 
-            profileRepository.saveWithVector(
-                    bio,
-                    profileData.getVibeTags(),
-                    user.getId(),
-                    vectorString,
-                    pic != null ? pic.trim() : null);
+            VibeProfile profile = profileRepository.findByUserId(user.getId()).orElse(new VibeProfile());
+            profile.setUser(user);
+            profile.setBio(bio);
+            profile.setVibeTags(profileData.getVibeTags());
+            profile.setBioVector(vectorString);
+            profile.setProfilePicUrl(pic != null ? pic.trim() : null);
+            profileRepository.save(profile);
 
             return ResponseEntity.ok("Vibe Saved Successfully!");
 

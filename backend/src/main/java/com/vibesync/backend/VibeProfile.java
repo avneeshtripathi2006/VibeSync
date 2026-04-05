@@ -16,10 +16,9 @@ public class VibeProfile {
     private Long id;
 
     // This links the profile to a specific User by their ID
-    @JsonIgnore // 👈 Add this (you might need to import
-                // com.fasterxml.jackson.annotation.JsonIgnore)
+    @JsonIgnore
     @OneToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @JoinColumn(name = "user_id", referencedColumnName = "id", unique = true, nullable = false)
     private User user;
     private String bio;
 

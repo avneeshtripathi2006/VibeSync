@@ -15,23 +15,6 @@ import java.util.Optional;
 public interface ProfileRepository extends JpaRepository<VibeProfile, Long> {
     Optional<VibeProfile> findByUserId(Long userId);
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Transactional
-    @Query(value = "INSERT INTO vibe_profiles (bio, vibe_tags, user_id, bio_vector, profile_pic_url) " +
-            "VALUES (:bio, :tags, :userId, " +
-            "CASE WHEN :vector IS NULL OR TRIM(COALESCE(:vector, '')) = '' THEN NULL ELSE CAST(:vector AS vector) END, " +
-            ":profilePicUrl) " +
-            "ON CONFLICT (user_id) DO UPDATE SET " +
-            "bio = EXCLUDED.bio, " +
-            "vibe_tags = EXCLUDED.vibe_tags, " +
-            "bio_vector = COALESCE(EXCLUDED.bio_vector, vibe_profiles.bio_vector), " +
-            "profile_pic_url = EXCLUDED.profile_pic_url", nativeQuery = true)
-    void saveWithVector(@Param("bio") String bio,
-            @Param("tags") String tags,
-            @Param("userId") Long userId,
-            @Param("vector") String vector,
-            @Param("profilePicUrl") String profilePicUrl);
-
     @Query(value = "SELECT u.id as userId, u.full_name as fullName, vp.bio as bio, vp.vibe_tags as vibeTags, " +
                "(vp.bio_vector <=> me.bio_vector) as distance " +
                "FROM vibe_profiles vp " +
