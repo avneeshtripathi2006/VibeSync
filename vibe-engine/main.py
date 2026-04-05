@@ -48,7 +48,10 @@ async def backend_url():
 
 @app.post("/embed")
 async def get_embedding(request: BioRequest):
+    # Kept in sync with Java EmbeddingFallback (same SHA-256 prefix cap).
     text = request.text.encode("utf-8")
+    if len(text) > 800:
+        text = text[:800]
     digest = hashlib.sha256(text).digest()
     embedding = []
     for i in range(0, 384):

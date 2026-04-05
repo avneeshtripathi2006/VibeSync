@@ -38,7 +38,15 @@ const Profile = () => {
       setProfilePicUrl(profileRes.data.profilePicUrl || "");
     } catch (err) {
       console.error("Failed to update profile", err);
-      showToast("Could not save profile. Try signing in again.");
+      const msg =
+        typeof err.response?.data === "string"
+          ? err.response.data.replace(/^Error:\s*/i, "").trim()
+          : err.response?.data?.message || err.message;
+      showToast(
+        msg && msg.length < 220
+          ? msg
+          : "Could not save profile. Use an HTTPS image link (not a pasted file), or try signing in again."
+      );
     } finally {
       setSaving(false);
     }
@@ -137,8 +145,16 @@ const Profile = () => {
                 className="max-w-xs mx-auto md:mx-0 space-y-4 bg-white/5 border border-white/10 p-6 rounded-2xl"
               >
                 <div className="text-left">
-                  <label className="block text-xs text-slate-400 mb-1">Profile picture URL</label>
-                  <input value={profilePicUrl} onChange={(e) => setProfilePicUrl(e.target.value)} placeholder="https://..." className="w-full rounded-lg p-2 bg-slate-900 border border-white/10 text-sm" />
+                  <label className="block text-xs text-slate-400 mb-1">Profile picture URL (HTTPS link only)</label>
+                  <p className="text-[10px] text-slate-500 mb-1 leading-snug">
+                    Paste a direct image link (Imgur, Discord CDN, GitHub raw). Do not paste the image itself — data URLs crash the free server.
+                  </p>
+                  <input
+                    value={profilePicUrl}
+                    onChange={(e) => setProfilePicUrl(e.target.value)}
+                    placeholder="https://i.imgur.com/....jpg"
+                    className="w-full rounded-lg p-2 bg-slate-900 border border-white/10 text-sm"
+                  />
                 </div>
 
                 <div className="text-left">

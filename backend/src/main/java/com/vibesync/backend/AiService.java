@@ -13,12 +13,15 @@ import java.util.Map;
 
 @Service
 public class AiService {
-    private static final RestTemplate restTemplate = new RestTemplate();
 
+    private final RestTemplate restTemplate;
     private final String aiServiceUrl;
 
-    public AiService(@Value("${AI_SERVICE_URL:http://localhost:8000}") String aiServiceUrl) {
-        this.aiServiceUrl = aiServiceUrl;
+    public AiService(RestTemplate restTemplate,
+            @Value("${AI_SERVICE_URL:http://localhost:8000}") String aiServiceUrl) {
+        this.restTemplate = restTemplate;
+        this.aiServiceUrl = aiServiceUrl.endsWith("/") ? aiServiceUrl.substring(0, aiServiceUrl.length() - 1)
+                : aiServiceUrl;
     }
 
     public String getEmbedding(String text) {
@@ -42,7 +45,7 @@ public class AiService {
                     .collect(java.util.stream.Collectors.joining(","));
             return "[" + vectorLiteral + "]";
         } catch (Exception e) {
-            System.err.println("AI Embedding Failed: " + e.getMessage());
+            System.err.println("AI Embedding Failed (using local fallback if configured): " + e.getMessage());
             return null;
         }
     }

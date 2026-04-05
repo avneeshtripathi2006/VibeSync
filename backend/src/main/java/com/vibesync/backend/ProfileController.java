@@ -38,14 +38,36 @@ public class ProfileController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error: User not found.");
             }
 
-            String vectorString = aiService.getEmbedding(profileData.getBio());
+            String bio = profileData.getBio();
+            if (bio != null && bio.length() > 4000) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: Bio is too long (max 4000 characters).");
+            }
+
+            String pic = profileData.getProfilePicUrl();
+            if (pic != null && !pic.isBlank()) {
+                String t = pic.trim();
+                if (t.regionMatches(true, 0, "data:", 0, 5)) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                            "Error: Do not paste image files. Use a direct HTTPS link (Imgur, GitHub raw, etc.). "
+                                    + "Data URLs are too large for this server.");
+                }
+                if (t.length() > 2048) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body("Error: Picture URL too long (max 2048 characters).");
+                }
+            }
+
+            String vectorString = aiService.getEmbedding(bio);
+            if (vectorString == null || vectorString.isBlank()) {
+                vectorString = EmbeddingFallback.vectorLiteralFromText(bio);
+            }
 
             profileRepository.saveWithVector(
-                    profileData.getBio(),
+                    bio,
                     profileData.getVibeTags(),
                     user.getId(),
                     vectorString,
-                    profileData.getProfilePicUrl());
+                    pic != null ? pic.trim() : null);
 
             return ResponseEntity.ok("Vibe Saved Successfully!");
 
@@ -112,7 +134,11 @@ public class ProfileController {
                 return List.of();
             }
 
-            return profileRepository.findTopMatches(user.getId());
+            List<MatchProjection> matches = profileRepository.findTopMatches(user.getId());
+            if (matches == null || matches.isEmpty()) {
+                matches = profileRepository.findTopMatchesWithoutVectors(user.getId());
+            }
+            return matches;
         } catch (Exception e) {
             e.printStackTrace();
             return List.of();

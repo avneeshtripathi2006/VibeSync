@@ -29,7 +29,8 @@ public class VibeProfile {
 
     private String vibeTags; // We'll store these as "Music,Coding,Gym"
 
-    @Column(length = 2048)
+    /** HTTPS URLs only in production; keep TEXT so long links fit (not base64 blobs). */
+    @Column(columnDefinition = "TEXT")
     private String profilePicUrl;
 
     public VibeProfile() {
