@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -13,6 +14,9 @@ import org.springframework.web.servlet.view.RedirectView;
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
+
+    @Value("${app.debug-endpoints-enabled:false}")
+    private boolean debugEndpointsEnabled;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -106,16 +110,22 @@ public class AuthController {
 
     @GetMapping("/test")
     public String test() {
+        if (!debugEndpointsEnabled) {
+            return "Not Found";
+        }
         return "Backend is working! ✅";
     }
 
     @GetMapping("/test-db")
     public String testDatabase() {
+        if (!debugEndpointsEnabled) {
+            return "Not Found";
+        }
         try {
             long count = userRepository.count();
             return "Database connected! ✅ Total users: " + count;
         } catch (Exception e) {
-            return "Database ERROR: " + e.getMessage();
+            return "Database ERROR";
         }
     }
 }

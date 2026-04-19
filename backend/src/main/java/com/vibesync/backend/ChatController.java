@@ -3,9 +3,12 @@ package com.vibesync.backend;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,22 +20,41 @@ import java.util.Optional;
 @RequestMapping("/api/chat")
 public class ChatController {
 
+    private static final int MAX_MESSAGE_CHARS = 2000;
+
     @Autowired
     private MessageRepository messageRepository;
     @Autowired
     private UserRepository userRepository;
     @Autowired
-    private JwtUtil jwtUtil;
-    @Autowired
     private FriendRequestRepository friendRequestRepository;
+
+    private User getAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return null;
+        }
+        String email = authentication.getName();
+        if (email == null || email.isBlank()) {
+            return null;
+        }
+        return userRepository.findByEmail(email);
+    }
 
     @PostMapping("/send")
     public Message sendMessage(@RequestHeader("Authorization") String token, @RequestBody Message msg) {
         if (token == null || !token.startsWith("Bearer "))
             return null;
 
-        String email = jwtUtil.extractEmail(token.substring(7));
-        User sender = userRepository.findByEmail(email);
+        User sender = getAuthenticatedUser();
+        if (sender == null || msg == null || msg.getReceiverId() == null) {
+            return null;
+        }
+
+        String content = msg.getContent();
+        if (content == null || content.isBlank() || content.length() > MAX_MESSAGE_CHARS) {
+            return null;
+        }
 
         // Check if users are friends (accepted request)
         Optional<FriendRequest> friendRequest = friendRequestRepository.findBetweenUsers(sender.getId(), msg.getReceiverId());
@@ -57,8 +79,10 @@ public class ChatController {
         if (token == null || !token.startsWith("Bearer "))
             return null;
 
-        String email = jwtUtil.extractEmail(token.substring(7));
-        User sender = userRepository.findByEmail(email);
+        User sender = getAuthenticatedUser();
+        if (sender == null) {
+            return null;
+        }
 
         // Check if users are friends
         Optional<FriendRequest> friendRequest = friendRequestRepository.findBetweenUsers(sender.getId(), receiverId);
@@ -81,9 +105,26 @@ public class ChatController {
     private org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
 
     @MessageMapping("/chat.send")
-    public void processMessage(@Payload Message chatMessage) {
+    public void processMessage(@Payload Message chatMessage, Principal principal) {
+        if (chatMessage == null || principal == null || principal.getName() == null || principal.getName().isBlank()) {
+            return;
+        }
+
+        User sender = userRepository.findByEmail(principal.getName());
+        if (sender == null || chatMessage.getReceiverId() == null) {
+            return;
+        }
+
+        String content = chatMessage.getContent();
+        if (content == null || content.isBlank() || content.length() > MAX_MESSAGE_CHARS) {
+            return;
+        }
+
+        // Never trust senderId from the client payload.
+        chatMessage.setSenderId(sender.getId());
+
         // Check if users are friends
-        Optional<FriendRequest> friendRequest = friendRequestRepository.findBetweenUsers(chatMessage.getSenderId(), chatMessage.getReceiverId());
+        Optional<FriendRequest> friendRequest = friendRequestRepository.findBetweenUsers(sender.getId(), chatMessage.getReceiverId());
         if (friendRequest.isEmpty() || !friendRequest.get().getStatus().equals(FriendRequest.FriendRequestStatus.ACCEPTED)) {
             return; // Cannot send message if not friends
         }
@@ -103,8 +144,10 @@ public class ChatController {
     public Long getCount(@RequestHeader("Authorization") String token, @PathVariable Long receiverId) {
         if (token == null || !token.startsWith("Bearer "))
             return 0L;
-        String email = jwtUtil.extractEmail(token.substring(7));
-        User sender = userRepository.findByEmail(email);
+        User sender = getAuthenticatedUser();
+        if (sender == null) {
+            return 0L;
+        }
         return messageRepository.countMessagesBetween(sender.getId(), receiverId);
     }
 
@@ -114,8 +157,10 @@ public class ChatController {
         if (token == null || !token.startsWith("Bearer "))
             return Map.of("error", "Unauthorized");
 
-        String email = jwtUtil.extractEmail(token.substring(7));
-        User receiver = userRepository.findByEmail(email);
+        User receiver = getAuthenticatedUser();
+        if (receiver == null) {
+            return Map.of("error", "Unauthorized");
+        }
 
         // Get unread messages from sender to receiver
         List<Message> unreadMessages = messageRepository.findBySenderIdAndReceiverIdAndIsReadFalse(senderId, receiver.getId());
@@ -146,8 +191,10 @@ public class ChatController {
         if (token == null || !token.startsWith("Bearer "))
             return Map.of("error", "Unauthorized");
 
-        String email = jwtUtil.extractEmail(token.substring(7));
-        User receiver = userRepository.findByEmail(email);
+        User receiver = getAuthenticatedUser();
+        if (receiver == null) {
+            return Map.of("error", "Unauthorized");
+        }
 
         long unreadCount = messageRepository.countBySenderIdAndReceiverIdAndIsReadFalse(senderId, receiver.getId());
         return Map.of("unreadCount", unreadCount);
@@ -159,8 +206,7 @@ public class ChatController {
             return Map.of("error", "Unauthorized");
         }
 
-        String email = jwtUtil.extractEmail(token.substring(7));
-        User receiver = userRepository.findByEmail(email);
+        User receiver = getAuthenticatedUser();
         if (receiver == null) {
             return Map.of("error", "Unauthorized");
         }
@@ -175,8 +221,7 @@ public class ChatController {
             return List.of();
         }
 
-        String email = jwtUtil.extractEmail(token.substring(7));
-        User currentUser = userRepository.findByEmail(email);
+        User currentUser = getAuthenticatedUser();
         if (currentUser == null) {
             return List.of();
         }

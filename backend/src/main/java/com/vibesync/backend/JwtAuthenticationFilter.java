@@ -52,7 +52,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         } else {
             String tokenFromParam = request.getParameter("token");
-            if (tokenFromParam != null && !tokenFromParam.isBlank()) {
+            boolean isWebSocketHandshake = request.getRequestURI() != null && request.getRequestURI().startsWith("/ws-vibe");
+            if (isWebSocketHandshake && tokenFromParam != null && !tokenFromParam.isBlank()) {
                 if (tokenFromParam.startsWith("Bearer ")) {
                     jwtToken = tokenFromParam.substring(7);
                 } else {
@@ -69,8 +70,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 } catch (Exception e) {
                     logger.warn("Unable to get JWT Token");
                 }
-            } else {
-                logger.warn("JWT Token does not begin with Bearer String");
             }
         }
 

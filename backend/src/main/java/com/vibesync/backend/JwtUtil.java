@@ -7,6 +7,7 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
@@ -23,7 +24,13 @@ public class JwtUtil {
     // This method runs automatically after the SECRET_KEY is injected
     @PostConstruct
     public void init() {
-        this.key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+        if (SECRET_KEY == null || SECRET_KEY.isBlank()) {
+            throw new IllegalStateException("JWT_SECRET must be configured and non-empty");
+        }
+        if (SECRET_KEY.length() < 32) {
+            throw new IllegalStateException("JWT_SECRET must be at least 32 characters for HS256");
+        }
+        this.key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
     }
 
     // 1. Generate a Token for a user

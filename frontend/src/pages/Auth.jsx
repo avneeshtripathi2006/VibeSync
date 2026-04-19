@@ -17,12 +17,13 @@ const Auth = () => {
   // Check for OAuth success callback
   useEffect(() => {
     const token = searchParams.get('token');
-    const provider = searchParams.get('provider');
     const error = searchParams.get('error');
 
     if (token) {
       localStorage.setItem("token", token);
       window.dispatchEvent(new Event("vibesync-token"));
+      const cleanPath = `${window.location.origin}${window.location.pathname}`;
+      window.history.replaceState({}, document.title, cleanPath);
       navigate("/home");
     } else if (error) {
       showToast("OAuth sign-in failed. Please try again.");
