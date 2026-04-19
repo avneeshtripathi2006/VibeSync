@@ -6,13 +6,9 @@ WORKDIR /app
 # When Render/CI sets backend folder as build context, these paths are just local.
 COPY pom.xml ./
 COPY src ./src
-COPY mvnw ./
-COPY .mvn ./.mvn
-
-RUN chmod +x ./mvnw
 
 # Build backend artifact and delete Maven cache in same layer to reduce size
-RUN ./mvnw -B clean package -DskipTests && rm -rf /root/.m2/repository
+RUN mvn -B clean package -DskipTests && rm -rf /root/.m2/repository
 
 # Run stage
 FROM eclipse-temurin:21-jre
