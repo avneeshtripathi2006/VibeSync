@@ -1,0 +1,45 @@
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "homepage": "https://avneeshtripathi2006.github.io/VibeSync",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:ghpages": "vite build && cp dist/index.html dist/404.html",
+    "predeploy": "npm run build:ghpages",
+    "deploy": "npx gh-pages -d dist",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@stomp/stompjs": "^7.3.0",
+    "@tailwindcss/postcss": "^4.2.1",
+    "@tailwindcss/vite": "^4.2.2",
+    "axios": "^1.13.6",
+    "framer-motion": "^12.38.0",
+    "jwt-decode": "^4.0.0",
+    "lucide-react": "^0.577.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-jwt": "^2.0.0",
+    "react-router-dom": "^7.13.1",
+    "sockjs-client": "^1.6.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.0",
+    "autoprefixer": "^10.4.27",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "gh-pages": "^5.0.0",
+    "globals": "^17.4.0",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^4.2.1",
+    "vite": "^8.0.0"
+  }
+}

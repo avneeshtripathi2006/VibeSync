@@ -1,0 +1,79 @@
+name: Deploy Frontend to GitHub Pages
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/deploy-frontend.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+
+      - name: Install dependencies
+        run: cd frontend && npm ci
+
+      # GitHub Pages project sites live under /RepoName/ — Vite must use the same base or JS/CSS 404.
+      - name: Resolve Vite base path
+        id: vite_base
+        run: |
+          BP='${{ secrets.VITE_BASE_PATH }}'
+          if [ -z "$BP" ]; then BP='/VibeSync/'; fi
+          echo "path=$BP" >> "$GITHUB_OUTPUT"
+          echo "Using VITE_BASE_PATH=$BP"
+
+      # If secrets are empty, baked-in bundle falls back to localhost — set defaults for this deploy target.
+      - name: Resolve API URLs for Pages build
+        id: api_urls
+        run: |
+          API='${{ secrets.VITE_API_URL }}'
+          WS='${{ secrets.VITE_WS_URL }}'
+          if [ -z "$API" ]; then API='https://vibesync-zc9a.onrender.com'; fi
+          if [ -z "$WS" ]; then WS='wss://vibesync-zc9a.onrender.com/ws-vibe'; fi
+          echo "api_url=$API" >> "$GITHUB_OUTPUT"
+          echo "ws_url=$WS" >> "$GITHUB_OUTPUT"
+          echo "Using VITE_API_URL=$API"
+
+      - name: Build with production config
+        run: cd frontend && npm run build
+        env:
+          VITE_API_URL: ${{ steps.api_urls.outputs.api_url }}
+          VITE_WS_URL: ${{ steps.api_urls.outputs.ws_url }}
+          VITE_BASE_PATH: ${{ steps.vite_base.outputs.path }}
+          VITE_API_TIMEOUT: 45000
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

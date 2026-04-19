@@ -1,0 +1,58 @@
+# Java / Maven
+/backend/target/
+/backend/.mvn/
+/backend/.settings/
+/backend/.idea/
+/**/*.iml
+**/target/
+**/classpath
+default
+
+# Backend secrets (templates are committed: backend/.env.example)
+/backend/.env
+!/backend/.env.example
+
+# Node
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.env
+/frontend/.env.local
+/frontend/.env.development
+/frontend/.env.production
+/frontend/.env.development.local
+/frontend/.env.production.local
+
+# Vibe engine
+/vibe-engine/.env
+/vibe-engine/.venv/
+/vibe-engine/__pycache__/
+!/vibe-engine/.env.example
+
+# Root env (if used)
+.env
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+debug-*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Optional local docs / scripts (remove from tracking if previously committed)
+/QUICK_SETUP.md
+/SOLUTION_SUMMARY.md
+/DEPLOYMENT_GUIDE.md
+/SETUP_GUIDE.md
+/frontend/README.md
+/backend/HELP.md
+/troubleshoot.ps1
+/troubleshoot.sh
+/keep-alive-monitor.ps1
+/keep-alive-monitor.sh
+/test_db_connection.py

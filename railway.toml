@@ -1,0 +1,12 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = "vibe-engine/Dockerfile"
+
+[deploy]
+# Use shell evaluation so $PORT gets resolved properly in Railway runtime
+startCommand = "sh -c 'uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}'"
+healthcheckPath = "/ping"
+healthcheckTimeout = 200
+
+# Railway will automatically detect and use files from the vibe-engine directory
+# when this config is in the root

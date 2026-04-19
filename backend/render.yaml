@@ -1,0 +1,46 @@
+# Render Blueprint — set secrets in the dashboard (never commit real values).
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: vibesync-backend
+    env: java
+    javaVersion: 21
+    buildCommand: ./mvnw clean package -DskipTests
+    startCommand: java -Dserver.port=$PORT -Xmx512M -Xms256M -jar target/backend-0.0.1-SNAPSHOT.jar
+    plan: free
+    envVars:
+      - key: GITHUB_USERNAME
+        sync: false
+      - key: RENDER_BACKEND_DOMAIN
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: BACKEND_PUBLIC_URL
+        sync: false
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: SPRING_DATASOURCE_USERNAME
+        sync: false
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: AI_SERVICE_URL
+        sync: false
+      # Leave unset for default patterns (GitHub Pages, *.onrender.com, localhost).
+      # If set, must list every allowed Origin, comma-separated, or SockJS returns 403.
+      - key: WEBSOCKET_ORIGINS
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: SPOTIFY_CLIENT_ID
+        sync: false
+      - key: SPOTIFY_CLIENT_SECRET
+        sync: false
